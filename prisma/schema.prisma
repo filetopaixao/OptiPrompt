@@ -30,6 +30,18 @@ enum ExecutionStatus {
   ERROR
 }
 
+/// Provedor de IA cujo saldo é recarregado com a fatia da receita de
+/// assinaturas — ver src/lib/credits/provider-allocation.ts.
+enum CreditProvider {
+  ANTHROPIC
+  MARITACA
+}
+
+enum CreditAllocationStatus {
+  PENDING
+  COMPLETED
+}
+
 /// Espelha os status de assinatura do Stripe — ver src/lib/stripe.
 enum SubscriptionStatus {
   ACTIVE
@@ -54,11 +66,13 @@ model Plan {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String?
+  /// Hash bcrypt — null só para linhas legadas anteriores ao login real.
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   planId String?
   plan   Plan?   @relation(fields: [planId], references: [id])
@@ -72,8 +86,9 @@ model User {
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
 
-  prompts    Prompt[]
-  executions Execution[]
+  prompts                   Prompt[]
+  executions                Execution[]
+  providerCreditAllocations ProviderCreditAllocation[]
 
   @@map("users")
 }
@@ -114,6 +129,30 @@ model Execution {
   @@index([userId])
   @@index([promptId])
   @@map("executions")
+}
+
+/// Fatia da receita de cada pagamento de assinatura reservada para recarregar
+/// o saldo pré-pago da OptiPrompt nos provedores de IA. Nenhum dos dois
+/// (Anthropic, Maritaca) expõe API de recarga programática — este registro é
+/// o controle interno de quanto recarregar manualmente em cada um.
+model ProviderCreditAllocation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// event.id do webhook do Stripe que originou esta alocação (idempotência).
+  stripeEventId     String @unique
+  amountPaidInCents Int
+  provider          CreditProvider
+  amountInCents     Int
+
+  status      CreditAllocationStatus @default(PENDING)
+  completedAt DateTime?
+
+  @@index([status])
+  @@map("provider_credit_allocations")
 }
 
 model ExecutionResult {

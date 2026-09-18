@@ -2,6 +2,7 @@ import { Check, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/format-currency";
+import { cn } from "@/lib/utils";
 import type { PlanSummary } from "@/lib/plans";
 import { CheckoutButton } from "./checkout-button";
 
@@ -45,7 +46,7 @@ export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
           return (
             <Card
               key={plan.id}
-              className={isHighlighted ? "border-primary shadow-lg shadow-primary/10" : undefined}
+              className={cn("h-full", isHighlighted && "border-primary shadow-lg shadow-primary/10")}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -61,7 +62,7 @@ export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
                   {plan.monthlyCreditLimit.toLocaleString("pt-BR")} créditos de IA
                 </div>
               </CardHeader>
-              <CardContent className="flex flex-col gap-4">
+              <CardContent className="flex flex-1 flex-col gap-4">
                 <ul className="flex flex-col gap-2 text-sm">
                   <li className="flex items-start gap-2 font-medium">
                     <Check className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -74,7 +75,9 @@ export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
                     </li>
                   ))}
                 </ul>
-                <CheckoutButton planSlug={plan.slug} label="Assinar agora" />
+                <div className="mt-auto">
+                  <CheckoutButton planSlug={plan.slug} label="Assinar agora" />
+                </div>
               </CardContent>
             </Card>
           );

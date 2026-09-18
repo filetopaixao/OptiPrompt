@@ -5,8 +5,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard" },
-  { href: "/history", label: "Histórico" },
+  { href: "/app", label: "Dashboard" },
+  { href: "/app/history", label: "Histórico" },
 ] as const;
 
 export function MainNav() {

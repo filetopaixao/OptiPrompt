@@ -6,8 +6,8 @@ import { getCurrentUserId } from "./current-user";
  * Gate de assinatura. Roda em Server Components (Node.js), não em
  * middleware.ts — o Edge runtime do middleware não suporta o driver
  * node-postgres do Prisma sem Prisma Accelerate (serviço pago à parte).
- * Se/quando entrar sessão real via cookie, este é o lugar certo pra também
- * checar a identidade — hoje só valida o usuário demo fixo.
+ * A identidade já é resolvida por getCurrentUserId() via sessão NextAuth;
+ * aqui só valida se a assinatura dessa conta está ativa.
  */
 export async function requireActiveSubscription(): Promise<void> {
   const userId = await getCurrentUserId();
@@ -17,6 +17,6 @@ export async function requireActiveSubscription(): Promise<void> {
   });
 
   if (user.subscriptionStatus !== "ACTIVE") {
-    redirect("/agencias?assinatura=necessaria");
+    redirect("/?assinatura=necessaria");
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { Printer, SlidersHorizontal } from "lucide-react";
+import Image from "next/image";
+import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CostProjection } from "@/components/dashboard/cost-projection";
 import type { ExecutionDTO } from "@/types/execution";
@@ -23,7 +24,7 @@ export function ReportView({ execution }: { execution: ExecutionDTO }) {
       <header className="mb-8 flex items-start justify-between gap-4 border-b pb-4">
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <SlidersHorizontal className="size-4" />
+            <Image src="/logo-icon.png" alt="" width={16} height={16} />
             OptiPrompt — Relatório de comparação
           </div>
           <h1 className="mt-1 text-xl font-semibold">{execution.promptName}</h1>

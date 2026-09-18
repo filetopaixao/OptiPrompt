@@ -62,8 +62,8 @@ export async function POST(request: Request) {
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/?checkout=success`,
-    cancel_url: `${origin}/agencias?checkout=cancelled`,
+    success_url: `${origin}/app?checkout=success`,
+    cancel_url: `${origin}/?checkout=cancelled`,
     metadata: { userId, planId: plan.id },
   });
 

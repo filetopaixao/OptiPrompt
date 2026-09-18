@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { listPlans } from "@/lib/plans";
+import { LandingBenefits } from "@/components/landing/landing-benefits";
 import { LandingFAQ } from "@/components/landing/landing-faq";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHero } from "@/components/landing/landing-hero";
@@ -23,6 +24,7 @@ export default async function AgenciasPage() {
       <LandingNav />
       <main className="flex-1">
         <LandingHero />
+        <LandingBenefits />
         <LandingPricing plans={plans} />
         <LandingTestimonials />
         <LandingFAQ />

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db/prisma";
 import { getStripeClient, mapStripeSubscriptionStatus } from "@/lib/stripe/client";
+import { allocateProviderCredits } from "@/lib/credits/provider-allocation";
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
@@ -20,6 +21,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       ...(subscriptionId ? { stripeSubscriptionId: subscriptionId } : {}),
       subscriptionStatus: "ACTIVE",
     },
+  });
+}
+
+/** Dispara em toda fatura paga da assinatura — a primeira e cada renovação —
+ * cobrindo o ciclo completo de vida do pagamento (checkout.session.completed
+ * só cobre a primeira). */
+async function handleInvoicePaid(invoice: Stripe.Invoice, eventId: string) {
+  const customerId =
+    typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+  if (!customerId || invoice.amount_paid <= 0) return;
+
+  const user = await prisma.user.findUnique({ where: { stripeCustomerId: customerId } });
+  if (!user) return;
+
+  await allocateProviderCredits({
+    userId: user.id,
+    stripeEventId: eventId,
+    amountPaidInCents: invoice.amount_paid,
   });
 }
 
@@ -62,6 +81,9 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed":
       await handleCheckoutCompleted(event.data.object);
+      break;
+    case "invoice.paid":
+      await handleInvoicePaid(event.data.object, event.id);
       break;
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
