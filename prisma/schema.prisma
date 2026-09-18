@@ -1,0 +1,144 @@
+// OptiPrompt — schema do banco de dados
+// 1 crédito = R$ 0,001 de custo real nas APIs (ver src/lib/credits/credit-converter.ts)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// A connection string vive em prisma.config.ts (Migrate/Studio) e é passada
+// via driver adapter ao PrismaClient em runtime — ver src/lib/db/prisma.ts.
+datasource db {
+  provider = "postgresql"
+}
+
+enum Provider {
+  OPENAI
+  ANTHROPIC
+  GOOGLE
+  MARITACA
+  /// Modelos open-weight servidos pela Groq (ex.: GPT-OSS) — ver GROQ_API_KEY.
+  GROQ
+}
+
+enum ModelTier {
+  PREMIUM
+  COST_EFFECTIVE
+}
+
+enum ExecutionStatus {
+  SUCCESS
+  ERROR
+}
+
+/// Espelha os status de assinatura do Stripe — ver src/lib/stripe.
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INACTIVE
+}
+
+model Plan {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  slug         String   @unique
+  /// Preço da assinatura em centavos. O teto mensal de créditos é derivado
+  /// daqui (20% do valor) — ver getMonthlyCreditLimit em credit-converter.ts.
+  priceInCents Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users User[]
+
+  @@map("plans")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  planId String?
+  plan   Plan?   @relation(fields: [planId], references: [id])
+
+  // Consumo do ciclo mensal atual, em créditos (saldo = teto do plano - isto)
+  creditsUsedThisCycle Int      @default(0)
+  cycleStartedAt       DateTime @default(now())
+
+  // Assinatura (Stripe) — ver src/lib/stripe e middleware.ts.
+  subscriptionStatus   SubscriptionStatus @default(INACTIVE)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+
+  prompts    Prompt[]
+  executions Execution[]
+
+  @@map("users")
+}
+
+model Prompt {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  executions Execution[]
+
+  @@index([userId])
+  @@map("prompts")
+}
+
+/// Uma "execução" é um disparo de teste: o snapshot exato do prompt naquele
+/// momento + os resultados retornados por cada modelo selecionado.
+model Execution {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  promptId String
+  prompt   Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Snapshot imutável do prompt no momento da execução (versionamento)
+  systemPrompt String @db.Text
+  userMessage  String @db.Text
+
+  results ExecutionResult[]
+
+  @@index([userId])
+  @@index([promptId])
+  @@map("executions")
+}
+
+model ExecutionResult {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  executionId String
+  execution   Execution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  provider Provider
+  modelId  String
+  tier     ModelTier
+  status   ExecutionStatus @default(SUCCESS)
+
+  responseText String? @db.Text
+  errorMessage String? @db.Text
+
+  promptTokens     Int @default(0)
+  completionTokens Int @default(0)
+  latencyMs        Int @default(0)
+
+  // Custo real (para o motor de créditos) — nunca exibido diretamente na UI
+  estimatedCostInBRL     Decimal @db.Decimal(10, 6)
+  estimatedCostInCredits Int
+
+  @@index([executionId])
+  @@map("execution_results")
+}

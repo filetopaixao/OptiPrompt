@@ -1,0 +1,66 @@
+"use client";
+
+import { useState } from "react";
+import { Gauge, Trophy, Wallet } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatBRLPrecise } from "@/lib/format-currency";
+import { computeWinner, type ComparisonPriority } from "@/lib/executions/insights";
+import { getModelDefinition } from "@/types/models";
+import type { ExecutionResultDTO } from "@/types/execution";
+
+/**
+ * Painel de veredicto: em vez de deixar o cliente da agência interpretar os
+ * cards um a um, já anuncia o modelo vencedor e o ganho percentual —
+ * resumo executivo "mastigado" para quem vai decidir, não implementar.
+ */
+export function ExecutiveSummary({ results }: { results: ExecutionResultDTO[] }) {
+  // Preço é o critério padrão (posicionado antes de Velocidade) — decisão de
+  // produto: impacto financeiro é o que mais importa pra quem decide.
+  const [priority, setPriority] = useState<ComparisonPriority>("price");
+
+  const insight = computeWinner(results, priority);
+  if (!insight) return null;
+
+  const { winner, runnerUp, percentGain } = insight;
+  const winnerLabel = getModelDefinition(winner.modelId).label;
+  const runnerUpLabel = getModelDefinition(runnerUp.modelId).label;
+
+  const verdictSentence =
+    priority === "speed"
+      ? `${winnerLabel} respondeu ${percentGain}% mais rápido do que ${runnerUpLabel} neste teste.`
+      : `${winnerLabel} custou ${percentGain}% menos do que ${runnerUpLabel} neste teste.`;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <Trophy className="mt-0.5 size-6 shrink-0 text-primary" />
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Modelo vencedor
+          </p>
+          <p className="text-lg font-semibold">{winnerLabel}</p>
+          <p className="text-sm text-muted-foreground">{verdictSentence}</p>
+          {priority === "price" && (
+            <p className="text-xs text-muted-foreground">
+              {formatBRLPrecise(winner.estimatedCostInBRL)} vs. {formatBRLPrecise(runnerUp.estimatedCostInBRL)} por
+              requisição
+            </p>
+          )}
+        </div>
+      </div>
+
+      <Tabs value={priority} onValueChange={(value) => setPriority(value as ComparisonPriority)}>
+        <TabsList>
+          <TabsTrigger value="price">
+            <Wallet className="size-4" />
+            Preço
+          </TabsTrigger>
+          <TabsTrigger value="speed">
+            <Gauge className="size-4" />
+            Velocidade
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+}
