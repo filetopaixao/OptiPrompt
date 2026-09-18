@@ -18,8 +18,9 @@ export function LandingHero() {
             das suas LLMs
           </h1>
           <p className="max-w-xl text-balance text-lg text-muted-foreground">
-            Saiba exatamente qual prompt de IA está consumindo a margem da sua operação e compare
-            o desempenho de cada modelo em tempo real.
+            O OptiPrompt entrega o Raio-X do seu consumo: rastreie o custo em Reais, o gasto de
+            tokens e a latência de cada prompt específico em tempo real, sem depender de devs
+            para monitorar a operação.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <a href="#planos" className={buttonVariants({ size: "lg" })}>
