@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getCurrentUserId } from "@/lib/auth/current-user";
-import { prisma } from "@/lib/db/prisma";
-import { getOrCreateStripeCustomerId, getStripeClient, getStripePriceId } from "@/lib/stripe/client";
+import { getCreditPackPriceId } from "@/lib/credits/credit-pack";
+import { getOrCreateStripeCustomerId, getStripeClient } from "@/lib/stripe/client";
 
-const checkoutSchema = z.object({ planSlug: z.string().min(1) });
-
+/** Checkout de pagamento único (mode "payment") para o pacote avulso de
+ * créditos — diferente do checkout de assinatura (mode "subscription"),
+ * então fica num endpoint próprio em vez de sobrecarregar /api/stripe/checkout. */
 export async function POST(request: Request) {
   if (!process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json(
@@ -14,22 +14,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = checkoutSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
-  }
-
-  const plan = await prisma.plan.findUnique({ where: { slug: parsed.data.planSlug } });
-  if (!plan) {
-    return NextResponse.json({ error: "Plano não encontrado." }, { status: 404 });
-  }
-
   let priceId: string;
   try {
-    priceId = getStripePriceId(plan.slug);
+    priceId = getCreditPackPriceId();
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Plano sem preço configurado no Stripe." },
+      { error: error instanceof Error ? error.message : "Pacote de créditos não configurado." },
       { status: 501 },
     );
   }
@@ -40,12 +30,12 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;
   const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
+    mode: "payment",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/app?checkout=success`,
-    cancel_url: `${origin}/?checkout=cancelled`,
-    metadata: { userId, planId: plan.id },
+    success_url: `${origin}/app/billing?creditos=comprados`,
+    cancel_url: `${origin}/app/billing?checkout=cancelled`,
+    metadata: { userId, type: "credit_pack" },
   });
 
   if (!session.url) {

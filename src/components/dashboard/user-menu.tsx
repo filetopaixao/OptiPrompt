@@ -1,7 +1,7 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { CreditCard, LogOut } from "lucide-react";
+import { ArrowUpCircle, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -51,8 +51,8 @@ export function UserMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<a href="/app/billing" className="cursor-pointer" />}>
-          <CreditCard />
-          Comprar mais créditos
+          <ArrowUpCircle />
+          Upgrade
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

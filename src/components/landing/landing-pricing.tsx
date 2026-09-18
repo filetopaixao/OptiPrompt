@@ -7,9 +7,9 @@ import type { PlanSummary } from "@/lib/plans";
 import { CheckoutButton } from "./checkout-button";
 
 const PLAN_TEST_ESTIMATE: Record<string, string> = {
-  starter: "~100 testes de prompts/mês",
-  pro: "~250 testes de prompts/mês",
-  agencia: "~600 testes de prompts/mês",
+  starter: "≅ 1.000 testes de prompts/mês*",
+  pro: "≅ 2.500 testes de prompts/mês*",
+  agencia: "≅ 6.000 testes de prompts/mês*",
 };
 
 const PLAN_FEATURES: Record<string, string[]> = {
@@ -87,6 +87,11 @@ export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
       <p className="mt-6 text-center text-xs text-muted-foreground">
         * Os créditos são renovados a cada ciclo de faturamento mensal e não são cumulativos para o
         mês seguinte.
+      </p>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        * O volume de testes estimado varia conforme o tamanho do prompt e os provedores
+        escolhidos (modelos premium como GPT-4o e Claude 3.5 Sonnet consomem mais créditos por
+        execução).
       </p>
     </section>
   );

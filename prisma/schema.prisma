@@ -81,6 +81,11 @@ model User {
   creditsUsedThisCycle Int      @default(0)
   cycleStartedAt       DateTime @default(now())
 
+  /// Créditos avulsos comprados (pagamento único, fora da assinatura) — somam
+  /// ao teto do ciclo e NÃO vencem/resetam (ver getUsageSummary). Diferente
+  /// de creditsUsedThisCycle, que é sobre consumo do plano recorrente.
+  bonusCredits Int @default(0)
+
   // Assinatura (Stripe) — ver src/lib/stripe e middleware.ts.
   subscriptionStatus   SubscriptionStatus @default(INACTIVE)
   stripeCustomerId     String?            @unique
@@ -89,6 +94,7 @@ model User {
   prompts                   Prompt[]
   executions                Execution[]
   providerCreditAllocations ProviderCreditAllocation[]
+  creditPackPurchases       CreditPackPurchase[]
 
   @@map("users")
 }
@@ -153,6 +159,25 @@ model ProviderCreditAllocation {
 
   @@index([status])
   @@map("provider_credit_allocations")
+}
+
+/// Compra avulsa de créditos (pagamento único no Stripe, fora da assinatura
+/// recorrente). Registro existe principalmente para idempotência — evita
+/// creditar duas vezes se o Stripe reenviar o webhook.
+model CreditPackPurchase {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// checkout.session.id do Stripe — único, garante que o mesmo pagamento
+  /// nunca credita duas vezes mesmo com reentrega do webhook.
+  stripeSessionId   String @unique
+  amountPaidInCents Int
+  creditsAdded      Int
+
+  @@map("credit_pack_purchases")
 }
 
 model ExecutionResult {

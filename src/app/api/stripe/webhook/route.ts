@@ -3,8 +3,37 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db/prisma";
 import { getStripeClient, mapStripeSubscriptionStatus } from "@/lib/stripe/client";
 import { allocateProviderCredits } from "@/lib/credits/provider-allocation";
+import { CREDIT_PACK_AMOUNT } from "@/lib/credits/credit-pack";
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+/** Pacote avulso de créditos: pagamento único, sem assinatura envolvida.
+ * Idempotente via CreditPackPurchase.stripeSessionId (reentrega do webhook
+ * não credita duas vezes). */
+async function handleCreditPackPurchase(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.userId;
+  if (!userId || session.payment_status !== "paid") return;
+
+  const existing = await prisma.creditPackPurchase.findUnique({
+    where: { stripeSessionId: session.id },
+  });
+  if (existing) return;
+
+  await prisma.$transaction([
+    prisma.creditPackPurchase.create({
+      data: {
+        userId,
+        stripeSessionId: session.id,
+        amountPaidInCents: session.amount_total ?? 0,
+        creditsAdded: CREDIT_PACK_AMOUNT,
+      },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { bonusCredits: { increment: CREDIT_PACK_AMOUNT } },
+    }),
+  ]);
+}
+
+async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
   const planId = session.metadata?.planId;
   if (!userId) return;
@@ -22,6 +51,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       subscriptionStatus: "ACTIVE",
     },
   });
+}
+
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (session.mode === "payment") {
+    await handleCreditPackPurchase(session);
+  } else {
+    await handleSubscriptionCheckoutCompleted(session);
+  }
 }
 
 /** Dispara em toda fatura paga da assinatura — a primeira e cada renovação —

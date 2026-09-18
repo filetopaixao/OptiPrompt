@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { prisma } from "@/lib/db/prisma";
 
 let client: Stripe | null = null;
 
@@ -8,6 +9,26 @@ export function getStripeClient(): Stripe {
   }
   client ??= new Stripe(process.env.STRIPE_SECRET_KEY);
   return client;
+}
+
+/** Cria (ou reaproveita) o Stripe Customer do usuário — compartilhado pelos
+ * checkouts de assinatura e de pacote avulso de créditos. */
+export async function getOrCreateStripeCustomerId(userId: string): Promise<string> {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+  if (user.stripeCustomerId) return user.stripeCustomerId;
+
+  const stripe = getStripeClient();
+  const customer = await stripe.customers.create({
+    email: user.email,
+    metadata: { userId },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { stripeCustomerId: customer.id },
+  });
+
+  return customer.id;
 }
 
 /** Mapeia o slug interno do plano ao Price ID configurado no Stripe. */

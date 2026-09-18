@@ -66,6 +66,10 @@ export function DashboardWorkspace() {
 
       setExecution(data.execution as ExecutionDTO);
       applyUsage(data.usage as UsageSummary);
+      // Rola pro topo pra garantir que o veredito/relatório fique visível —
+      // se o usuário rolou a página pra preencher um prompt longo, o
+      // resultado nasceria fora da área visível sem isso.
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       toast.error("Erro de rede ao executar a comparação. Tente novamente.");
     } finally {

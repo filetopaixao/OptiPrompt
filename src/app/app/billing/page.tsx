@@ -1,11 +1,13 @@
-import { Zap } from "lucide-react";
+import { PackagePlus, Zap } from "lucide-react";
 import { getCurrentUserId } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/db/prisma";
 import { listPlans } from "@/lib/plans";
 import { formatBRL } from "@/lib/format-currency";
+import { CREDIT_PACK_AMOUNT } from "@/lib/credits/credit-pack";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
+import { CreditPackButton } from "@/components/dashboard/credit-pack-button";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,7 @@ export default async function BillingPage() {
   const [user, plans] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { plan: { select: { slug: true } } },
+      select: { bonusCredits: true, plan: { select: { slug: true } } },
     }),
     listPlans(),
   ]);
@@ -51,6 +53,34 @@ export default async function BillingPage() {
             </Card>
           );
         })}
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold">Crédito avulso</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Precisa de mais fôlego neste ciclo? Compre um pacote extra — não vence, fica disponível
+          até ser usado.
+          {user.bonusCredits > 0 && (
+            <> Você tem <strong className="text-foreground">{user.bonusCredits.toLocaleString("pt-BR")}</strong> créditos avulsos ativos.</>
+          )}
+        </p>
+
+        <Card className="mt-4 max-w-sm">
+          <CardHeader>
+            <CardTitle>Pacote de créditos</CardTitle>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-semibold">{formatBRL(39)}</span>
+              <span className="text-sm text-muted-foreground">pagamento único</span>
+            </div>
+            <div className="mt-1 flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary">
+              <PackagePlus className="size-3.5" />
+              +{CREDIT_PACK_AMOUNT.toLocaleString("pt-BR")} créditos
+            </div>
+          </CardHeader>
+          <CardContent>
+            <CreditPackButton />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
