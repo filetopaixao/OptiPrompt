@@ -38,6 +38,20 @@ export function computeWinner(
   return { winner, runnerUp, percentGain };
 }
 
+export interface LatencyRow {
+  modelId: string;
+  latencyMs: number;
+}
+
+/** Ordena os resultados bem-sucedidos por latência (mais rápido primeiro) —
+ * usado no gráfico de velocidade, alternativa ao projectMonthlyCost. */
+export function buildLatencyComparison(results: ExecutionResultDTO[]): LatencyRow[] {
+  return results
+    .filter((r) => r.status === "SUCCESS")
+    .map((r) => ({ modelId: r.modelId, latencyMs: r.latencyMs }))
+    .sort((a, b) => a.latencyMs - b.latencyMs);
+}
+
 export interface CostProjectionRow {
   modelId: string;
   costPerRequestBRL: number;

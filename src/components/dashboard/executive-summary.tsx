@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Gauge, Trophy, Wallet } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBRLPrecise } from "@/lib/format-currency";
@@ -12,12 +11,19 @@ import type { ExecutionResultDTO } from "@/types/execution";
  * Painel de veredicto: em vez de deixar o cliente da agência interpretar os
  * cards um a um, já anuncia o modelo vencedor e o ganho percentual —
  * resumo executivo "mastigado" para quem vai decidir, não implementar.
+ *
+ * `priority` é controlado pelo pai (DashboardWorkspace) — o gráfico de
+ * projeção ao lado (CostProjection) reage ao mesmo critério.
  */
-export function ExecutiveSummary({ results }: { results: ExecutionResultDTO[] }) {
-  // Preço é o critério padrão (posicionado antes de Velocidade) — decisão de
-  // produto: impacto financeiro é o que mais importa pra quem decide.
-  const [priority, setPriority] = useState<ComparisonPriority>("price");
-
+export function ExecutiveSummary({
+  results,
+  priority,
+  onPriorityChange,
+}: {
+  results: ExecutionResultDTO[];
+  priority: ComparisonPriority;
+  onPriorityChange: (priority: ComparisonPriority) => void;
+}) {
   const insight = computeWinner(results, priority);
   if (!insight) return null;
 
@@ -49,7 +55,7 @@ export function ExecutiveSummary({ results }: { results: ExecutionResultDTO[] })
         </div>
       </div>
 
-      <Tabs value={priority} onValueChange={(value) => setPriority(value as ComparisonPriority)}>
+      <Tabs value={priority} onValueChange={(value) => onPriorityChange(value as ComparisonPriority)}>
         <TabsList>
           <TabsTrigger value="price">
             <Wallet className="size-4" />

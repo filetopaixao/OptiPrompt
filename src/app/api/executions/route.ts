@@ -5,6 +5,7 @@ import { getUsageSummary, registerConsumption } from "@/lib/credits/usage-servic
 import { prisma } from "@/lib/db/prisma";
 import { toExecutionDTO } from "@/lib/executions/to-dto";
 import { runComparison } from "@/lib/ai/run-comparison";
+import { planExecutionBudget } from "@/lib/ai/budget";
 import { MODEL_CATALOG } from "@/types/models";
 
 const VALID_MODEL_IDS = MODEL_CATALOG.map((model) => model.id) as [string, ...string[]];
@@ -20,6 +21,13 @@ const runExecutionSchema = z.object({
 export async function POST(request: Request) {
   const userId = await getCurrentUserId();
 
+  const parsed = runExecutionSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Payload inválido." }, { status: 400 });
+  }
+
+  const { promptId, promptName, systemPrompt, userMessage, modelIds } = parsed.data;
+
   const usage = await getUsageSummary(userId);
   if (usage.isOverLimit) {
     return NextResponse.json(
@@ -28,12 +36,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = runExecutionSchema.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Payload inválido." }, { status: 400 });
+  // Injeção dinâmica de max_tokens: conta o custo real de ENTRADA antes de
+  // chamar qualquer provedor. Se só o envio já estoura o saldo, bloqueia
+  // aqui (nenhum dinheiro gasto); caso contrário, o que sobra vira o teto
+  // de tokens de saída de cada modelo — na pior das hipóteses a resposta
+  // vem cortada no meio, nunca deixando o usuário com saldo negativo.
+  const budgetPlan = await planExecutionBudget(modelIds, systemPrompt, userMessage, usage.creditsAvailable);
+  if (!budgetPlan.ok) {
+    return NextResponse.json({ error: budgetPlan.reason }, { status: 402 });
   }
-
-  const { promptId, promptName, systemPrompt, userMessage, modelIds } = parsed.data;
 
   const prompt = promptId
     ? await prisma.prompt.findFirstOrThrow({ where: { id: promptId, userId } })
@@ -41,7 +52,12 @@ export async function POST(request: Request) {
         data: { userId, name: promptName?.trim() || "Prompt sem título" },
       });
 
-  const results = await runComparison({ systemPrompt, userMessage, modelIds });
+  const results = await runComparison({
+    systemPrompt,
+    userMessage,
+    modelIds,
+    budgetPlans: budgetPlan.plans,
+  });
 
   const execution = await prisma.execution.create({
     data: {

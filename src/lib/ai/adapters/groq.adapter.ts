@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { BaseModelAdapter } from "./base-adapter";
 import type { ModelAdapterInput, ProviderCallResult } from "./types";
 import type { Provider } from "@/types/models";
+import { MAX_OUTPUT_TOKENS } from "@/lib/ai/limits";
 
 /**
  * Modelos open-weight de alta velocidade servidos pela Groq (LPU), endpoint
@@ -28,6 +29,7 @@ export class GroqAdapter extends BaseModelAdapter {
   protected async callProvider(input: ModelAdapterInput): Promise<ProviderCallResult> {
     const completion = await getClient().chat.completions.create({
       model: input.modelId,
+      max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
       messages: [
         { role: "system", content: input.systemPrompt },
         { role: "user", content: input.userMessage },

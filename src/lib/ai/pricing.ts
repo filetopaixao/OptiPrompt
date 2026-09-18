@@ -3,8 +3,8 @@
  * Fonte única de verdade para o cálculo de custo — atualize aqui quando os
  * provedores mudarem preços, sem tocar nos adapters.
  *
- * NOTA: valores placeholder (aprox. USD list price convertido a ~R$5,50/USD).
- * Ajustar antes de operar em produção.
+ * Valores derivados da tabela oficial de preço por milhão de tokens (R$/1M
+ * ÷ 1.000 = R$/1k, usado por calculateCostInBRL).
  */
 import type { ModelId } from "@/types/models";
 
@@ -16,18 +16,18 @@ export interface ModelPricing {
 }
 
 export const MODEL_PRICING: Record<ModelId, ModelPricing> = {
-  "gpt-4o": { inputPricePer1k: 0.0275, outputPricePer1k: 0.11 },
-  "gpt-4o-mini": { inputPricePer1k: 0.00083, outputPricePer1k: 0.0033 },
-  "claude-3-opus-20240229": { inputPricePer1k: 0.0825, outputPricePer1k: 0.4125 },
-  "claude-3-5-sonnet-20240620": { inputPricePer1k: 0.0165, outputPricePer1k: 0.0825 },
-  "claude-3-haiku-20240307": { inputPricePer1k: 0.00138, outputPricePer1k: 0.00688 },
-  "gemini-pro-latest": { inputPricePer1k: 0.006875, outputPricePer1k: 0.055 },
-  "gemini-flash-lite-latest": { inputPricePer1k: 0.001375, outputPricePer1k: 0.00825 },
-  "gemini-3.5-flash": { inputPricePer1k: 0.001925, outputPricePer1k: 0.0154 },
-  "sabia-4": { inputPricePer1k: 0.005, outputPricePer1k: 0.015 },
-  "sabiazinho-4": { inputPricePer1k: 0.0015, outputPricePer1k: 0.005 },
-  "openai/gpt-oss-120b": { inputPricePer1k: 0.000825, outputPricePer1k: 0.0033 },
-  "openai/gpt-oss-20b": { inputPricePer1k: 0.0004125, outputPricePer1k: 0.00165 },
+  "gpt-4o": { inputPricePer1k: 0.01283, outputPricePer1k: 0.0513 },
+  "gpt-4o-mini": { inputPricePer1k: 0.00077, outputPricePer1k: 0.00308 },
+  "claude-3-opus-20240229": { inputPricePer1k: 0.07695, outputPricePer1k: 0.38475 },
+  "claude-3-5-sonnet-20240620": { inputPricePer1k: 0.01539, outputPricePer1k: 0.07695 },
+  "claude-3-haiku-20240307": { inputPricePer1k: 0.00128, outputPricePer1k: 0.00641 },
+  "gemini-pro-latest": { inputPricePer1k: 0.01026, outputPricePer1k: 0.06156 },
+  "gemini-flash-lite-latest": { inputPricePer1k: 0.00128, outputPricePer1k: 0.0077 },
+  "gemini-3.5-flash": { inputPricePer1k: 0.0077, outputPricePer1k: 0.04617 },
+  "sabia-4": { inputPricePer1k: 0.005, outputPricePer1k: 0.02 },
+  "sabiazinho-4": { inputPricePer1k: 0.001, outputPricePer1k: 0.004 },
+  "openai/gpt-oss-120b": { inputPricePer1k: 0.00077, outputPricePer1k: 0.00308 },
+  "openai/gpt-oss-20b": { inputPricePer1k: 0.00038, outputPricePer1k: 0.00154 },
 };
 
 export function calculateCostInBRL(

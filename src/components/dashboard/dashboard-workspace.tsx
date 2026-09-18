@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FileOutput } from "lucide-react";
 import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
+import type { ComparisonPriority } from "@/lib/executions/insights";
 import type { UsageSummary } from "@/lib/credits/usage-service";
 import { getModelDefinition, type ModelId } from "@/types/models";
 import type { ExecutionDTO } from "@/types/execution";
@@ -32,6 +33,10 @@ export function DashboardWorkspace() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userMessage, setUserMessage] = useState("");
   const [selectedModelIds, setSelectedModelIds] = useState<ModelId[]>(DEFAULT_MODEL_IDS);
+  // Preço é o critério padrão — decisão de produto: impacto financeiro é o
+  // que mais importa pra quem decide. Compartilhado entre o veredito e o
+  // gráfico de projeção, que reagem juntos ao mesmo toggle.
+  const [priority, setPriority] = useState<ComparisonPriority>("price");
 
   const [isRunning, setIsRunning] = useState(false);
   const [execution, setExecution] = useState<ExecutionDTO | null>(null);
@@ -110,7 +115,11 @@ export function DashboardWorkspace() {
       <div className="flex flex-col gap-4">
         {!isRunning && execution && execution.results.length > 0 && (
           <>
-            <ExecutiveSummary results={execution.results} />
+            <ExecutiveSummary
+              results={execution.results}
+              priority={priority}
+              onPriorityChange={setPriority}
+            />
             <div className="flex justify-end">
               <a
                 href={`/report/${execution.id}`}
@@ -122,7 +131,7 @@ export function DashboardWorkspace() {
                 Exportar relatório PDF
               </a>
             </div>
-            <CostProjection results={execution.results} />
+            <CostProjection results={execution.results} priority={priority} />
           </>
         )}
         <ResultsGrid

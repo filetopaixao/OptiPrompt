@@ -2,12 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { BaseModelAdapter } from "./base-adapter";
 import type { ModelAdapterInput, ProviderCallResult } from "./types";
 import type { Provider } from "@/types/models";
-
-const MAX_OUTPUT_TOKENS = 1024;
+import { MAX_OUTPUT_TOKENS } from "@/lib/ai/limits";
 
 let client: Anthropic | null = null;
 
-function getClient(): Anthropic {
+export function getClient(): Anthropic {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error("ANTHROPIC_API_KEY não configurada.");
   }
@@ -28,7 +27,7 @@ export class AnthropicAdapter extends BaseModelAdapter {
   protected async callProvider(input: ModelAdapterInput): Promise<ProviderCallResult> {
     const message = await getClient().messages.create({
       model: input.modelId,
-      max_tokens: MAX_OUTPUT_TOKENS,
+      max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
       system: input.systemPrompt,
       messages: [{ role: "user", content: input.userMessage }],
     });

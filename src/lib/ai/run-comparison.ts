@@ -1,10 +1,14 @@
 import { getAdapterForModel } from "./adapters";
+import type { ModelBudgetPlan } from "./budget";
 import type { ModelId, UnifiedModelResponse } from "@/types/models";
 
 export interface RunComparisonInput {
   systemPrompt: string;
   userMessage: string;
   modelIds: ModelId[];
+  /** Teto de tokens de saída por modelo, calculado por planExecutionBudget
+   * a partir do saldo restante do usuário — ver src/lib/ai/budget.ts. */
+  budgetPlans: ModelBudgetPlan[];
 }
 
 /**
@@ -14,11 +18,20 @@ export interface RunComparisonInput {
  * falha de um modelo nunca derruba os demais.
  */
 export async function runComparison(input: RunComparisonInput): Promise<UnifiedModelResponse[]> {
-  const { systemPrompt, userMessage, modelIds } = input;
+  const { systemPrompt, userMessage, modelIds, budgetPlans } = input;
+
+  const maxOutputTokensByModel = new Map(
+    budgetPlans.map((plan) => [plan.modelId, plan.maxOutputTokens]),
+  );
 
   const results = await Promise.all(
     modelIds.map((modelId) =>
-      getAdapterForModel(modelId).execute({ modelId, systemPrompt, userMessage }),
+      getAdapterForModel(modelId).execute({
+        modelId,
+        systemPrompt,
+        userMessage,
+        maxOutputTokens: maxOutputTokensByModel.get(modelId),
+      }),
     ),
   );
 

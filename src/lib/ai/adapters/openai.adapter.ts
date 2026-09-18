@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { BaseModelAdapter } from "./base-adapter";
 import type { ModelAdapterInput, ProviderCallResult } from "./types";
 import type { Provider } from "@/types/models";
+import { MAX_OUTPUT_TOKENS } from "@/lib/ai/limits";
 
 let client: OpenAI | null = null;
 
@@ -19,6 +20,7 @@ export class OpenAIAdapter extends BaseModelAdapter {
   protected async callProvider(input: ModelAdapterInput): Promise<ProviderCallResult> {
     const completion = await getClient().chat.completions.create({
       model: input.modelId,
+      max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
       messages: [
         { role: "system", content: input.systemPrompt },
         { role: "user", content: input.userMessage },
