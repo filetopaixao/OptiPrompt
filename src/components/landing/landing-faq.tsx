@@ -4,8 +4,38 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { MODEL_CATALOG, type Provider } from "@/types/models";
+
+const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "GROQ", "DEEPSEEK", "MISTRAL"];
+
+const PROVIDER_LABELS: Partial<Record<Provider, string>> = {
+  OPENAI: "OpenAI",
+  ANTHROPIC: "Anthropic",
+  GOOGLE: "Google",
+  GROQ: "Groq (open-weight)",
+  DEEPSEEK: "DeepSeek",
+  MISTRAL: "Mistral",
+};
+
+/** Monta a resposta "quais modelos" direto do catálogo (types/models.ts) —
+ * nunca fica desatualizada quando um modelo é trocado ou adicionado. */
+function buildModelsAnswer(): string {
+  const groups = PROVIDER_ORDER.map((provider) => {
+    const labels = MODEL_CATALOG.filter((model) => model.provider === provider).map(
+      (model) => model.label,
+    );
+    if (labels.length === 0) return null;
+    return `${PROVIDER_LABELS[provider]} (${labels.join(", ")})`;
+  }).filter((group): group is string => group !== null);
+
+  return `Hoje comparamos ${groups.join("; ")}. A lista cresce conforme novos modelos chegam no OpenRouter, sem precisar trocar de plataforma.`;
+}
 
 const FAQ_ITEMS = [
+  {
+    question: "Quais modelos de IA temos disponíveis para comparar?",
+    answer: buildModelsAnswer(),
+  },
   {
     question: "Preciso ter minhas próprias chaves de API dos modelos?",
     answer:
@@ -15,6 +45,11 @@ const FAQ_ITEMS = [
     question: "Como o custo por requisição é calculado?",
     answer:
       "Lemos os tokens de entrada e saída retornados por cada provedor e aplicamos a tabela de preços oficial de cada modelo, convertendo para créditos internos em tempo real.",
+  },
+  {
+    question: "O OptiPrompt é uma alternativa ao PromptFoo?",
+    answer:
+      "Sim, pra quem quer testar e comparar prompts sem configurar YAML nem rodar nada por linha de comando. O PromptFoo é uma ferramenta open-source focada em desenvolvedores; o OptiPrompt é hospedado, com interface visual pronta pra qualquer pessoa da agência rodar testes A/B de prompts, comparar custo/latência/qualidade entre modelos e exportar relatório pro cliente — sem precisar de chaves de API próprias nem ambiente de desenvolvimento.",
   },
   {
     question: "Consigo colocar minha marca no relatório para o meu cliente?",
@@ -32,9 +67,26 @@ const FAQ_ITEMS = [
   },
 ] as const;
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
+
 export function LandingFAQ() {
   return (
     <section id="faq" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-16 sm:px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <h2 className="mb-8 text-center text-3xl font-semibold tracking-tight">Perguntas frequentes</h2>
       <Accordion>
         {FAQ_ITEMS.map((item, index) => (

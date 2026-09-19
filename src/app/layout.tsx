@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Base pra resolver URLs relativas de OG/Twitter image e canonical em
+  // todas as páginas — sem isso o Next não consegue montar URL absoluta.
+  metadataBase: new URL("https://optiprompt.com.br"),
   title: "OptiPrompt",
   description: "Teste, compare custos e versione prompts em múltiplos modelos de IA.",
 };
