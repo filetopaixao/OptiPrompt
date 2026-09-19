@@ -4,7 +4,6 @@ import { Loader2, Play } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +26,10 @@ interface PromptEditorPanelProps {
   isRunning: boolean;
 }
 
+// Selo de destaque bem maior que o padrão do componente (size-4) pra ficar
+// óbvio que a seção é clicável/recolhível.
+const TRIGGER_ICON_CLASS = "**:data-[slot=accordion-trigger-icon]:size-6";
+
 export function PromptEditorPanel({
   promptName,
   onPromptNameChange,
@@ -45,13 +48,18 @@ export function PromptEditorPanel({
   const canSubmit = userMessage.trim().length > 0 && selectedModelIds.length > 0 && !isRunning;
 
   return (
-    <Card className="gap-4">
-      <CardContent className="flex flex-col gap-4">
-        {/* multiple=false (padrão) já garante o comportamento de sanfona:
-         * abrir uma seção fecha a outra automaticamente. */}
-        <Accordion defaultValue={["prompt"]}>
+    <div className="flex flex-col gap-4">
+      {/* multiple=false (padrão do Accordion) já garante o comportamento de
+       * sanfona: abrir uma seção fecha a outra automaticamente. Cada item
+       * fica dentro do seu próprio wrapper com visual de card — assim
+       * "not-last:border-b" (do componente base) nunca se aplica, porque
+       * cada AccordionItem passa a ser filho único do seu wrapper. */}
+      <Accordion defaultValue={["prompt"]} className="gap-4">
+        <div className="rounded-xl border bg-card px-4 shadow-sm ring-1 ring-foreground/10">
           <AccordionItem value="prompt">
-            <AccordionTrigger>Teste de prompt</AccordionTrigger>
+            <AccordionTrigger className={`text-base font-semibold hover:no-underline ${TRIGGER_ICON_CLASS}`}>
+              Teste de prompt
+            </AccordionTrigger>
             <AccordionContent>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -107,9 +115,11 @@ export function PromptEditorPanel({
               </div>
             </AccordionContent>
           </AccordionItem>
+        </div>
 
+        <div className="rounded-xl border bg-card px-4 shadow-sm ring-1 ring-foreground/10">
           <AccordionItem value="models">
-            <AccordionTrigger>
+            <AccordionTrigger className={`text-base font-semibold hover:no-underline ${TRIGGER_ICON_CLASS}`}>
               <span className="flex items-center gap-2">
                 Modelos
                 <Badge variant={selectedModelIds.length > 0 ? "default" : "outline"}>
@@ -126,13 +136,13 @@ export function PromptEditorPanel({
               />
             </AccordionContent>
           </AccordionItem>
-        </Accordion>
+        </div>
+      </Accordion>
 
-        <Button onClick={onSubmit} disabled={!canSubmit} className="w-full">
-          {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
-          {isRunning ? "Executando…" : "Executar comparação"}
-        </Button>
-      </CardContent>
-    </Card>
+      <Button onClick={onSubmit} disabled={!canSubmit} className="w-full">
+        {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
+        {isRunning ? "Executando…" : "Executar comparação"}
+      </Button>
+    </div>
   );
 }

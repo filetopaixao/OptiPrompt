@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { grantBonusCredits, resetUserCycle, updateUserAccess } from "./actions";
+import { adjustBonusCredits, resetUserCycle, updateUserAccess } from "./actions";
 
 const STATUS_OPTIONS: { value: SubscriptionStatus; label: string }[] = [
   { value: "ACTIVE", label: "Ativa" },
@@ -30,7 +30,13 @@ export function ManageUserDialog({
   user,
   plans,
 }: {
-  user: { id: string; email: string; planId: string; subscriptionStatus: SubscriptionStatus };
+  user: {
+    id: string;
+    email: string;
+    planId: string;
+    subscriptionStatus: SubscriptionStatus;
+    bonusCredits: number;
+  };
   plans: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -64,15 +70,15 @@ export function ManageUserDialog({
     });
   }
 
-  function handleGrantCredits() {
+  function handleAdjustCredits() {
     const amount = Number(bonusAmount);
     startTransition(async () => {
-      const result = await grantBonusCredits({ userId: user.id, amount });
+      const result = await adjustBonusCredits({ userId: user.id, amount });
       if (!result.ok) {
         toast.error(result.error);
         return;
       }
-      toast.success(`${amount.toLocaleString("pt-BR")} créditos adicionados.`);
+      toast.success(`Créditos avulsos agora: ${result.newBonusCredits!.toLocaleString("pt-BR")}.`);
       setBonusAmount("");
     });
   }
@@ -135,12 +141,16 @@ export function ManageUserDialog({
         </div>
 
         <div className="flex flex-col gap-2 border-t pt-4">
-          <Label>Créditos avulsos</Label>
+          <Label>
+            Créditos avulsos{" "}
+            <span className="font-normal text-muted-foreground">
+              (atual: {user.bonusCredits.toLocaleString("pt-BR")})
+            </span>
+          </Label>
           <div className="flex gap-2">
             <Input
               type="number"
-              min={1}
-              placeholder="Quantidade"
+              placeholder="Ex.: 5000 ou -5000"
               value={bonusAmount}
               onChange={(e) => setBonusAmount(e.target.value)}
             />
@@ -148,11 +158,14 @@ export function ManageUserDialog({
               type="button"
               variant="outline"
               disabled={isPending || !bonusAmount}
-              onClick={handleGrantCredits}
+              onClick={handleAdjustCredits}
             >
-              Adicionar
+              Aplicar
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Use um número negativo pra remover crédito avulso já concedido.
+          </p>
         </div>
 
         <DialogFooter>

@@ -86,22 +86,33 @@ export async function resetUserCycle(userId: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-export async function grantBonusCredits(input: {
+/** Ajusta os créditos avulsos do usuário — aceita valores negativos pra
+ * remover crédito já concedido. O resultado nunca fica abaixo de 0 (não dá
+ * pra "dever" crédito avulso; pra reduzir abaixo do teto do plano, use o
+ * campo de plano em vez deste). */
+export async function adjustBonusCredits(input: {
   userId: string;
   amount: number;
-}): Promise<ActionResult> {
+}): Promise<ActionResult & { newBonusCredits?: number }> {
   await requireAdmin();
 
-  if (!Number.isFinite(input.amount) || input.amount <= 0) {
-    return { ok: false, error: "Informe uma quantidade de créditos válida." };
+  const amount = Math.trunc(input.amount);
+  if (!Number.isFinite(amount) || amount === 0) {
+    return { ok: false, error: "Informe uma quantidade de créditos válida (positiva ou negativa)." };
   }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: input.userId },
+    select: { bonusCredits: true },
+  });
+  const newBonusCredits = Math.max(0, user.bonusCredits + amount);
 
   await prisma.user.update({
     where: { id: input.userId },
-    data: { bonusCredits: { increment: Math.floor(input.amount) } },
+    data: { bonusCredits: newBonusCredits },
   });
   await syncOpenRouterLimit(input.userId);
 
   revalidatePath("/admin/usuarios");
-  return { ok: true };
+  return { ok: true, newBonusCredits };
 }

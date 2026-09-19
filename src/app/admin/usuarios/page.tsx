@@ -51,6 +51,10 @@ export default async function UsuariosAdminPage() {
         {users.map((user) => {
           const creditLimit = user.plan ? getMonthlyCreditLimit(user.plan.priceInCents) : 0;
           const creditsTotal = creditLimit + user.bonusCredits;
+          // Mesma convenção do dashboard do usuário (disponível/total) — o
+          // formato antigo (usado/total) causava confusão por parecer um
+          // valor diferente do que o próprio usuário via logado.
+          const creditsAvailable = Math.max(0, creditsTotal - user.creditsUsedThisCycle);
 
           return (
             <Card key={user.id}>
@@ -69,8 +73,7 @@ export default async function UsuariosAdminPage() {
 
                 <div className="flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary">
                   <Zap className="size-3.5" />
-                  {user.creditsUsedThisCycle.toLocaleString("pt-BR")} /{" "}
-                  {creditsTotal.toLocaleString("pt-BR")}
+                  {creditsAvailable.toLocaleString("pt-BR")} / {creditsTotal.toLocaleString("pt-BR")}
                 </div>
 
                 <ManageUserDialog
@@ -79,6 +82,7 @@ export default async function UsuariosAdminPage() {
                     email: user.email,
                     planId: user.plan?.id ?? "",
                     subscriptionStatus: user.subscriptionStatus,
+                    bonusCredits: user.bonusCredits,
                   }}
                   plans={planOptions}
                 />
