@@ -6,6 +6,7 @@ export interface ActiveSubscriptionUser {
   email: string;
   name: string | null;
   planName: string | null;
+  planSlug: string | null;
 }
 
 /**
@@ -28,7 +29,7 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
       name: true,
       subscriptionStatus: true,
       mustChangePassword: true,
-      plan: { select: { name: true } },
+      plan: { select: { name: true, slug: true } },
     },
   });
 
@@ -42,5 +43,10 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
     redirect("/?assinatura=necessaria");
   }
 
-  return { email: user.email, name: user.name, planName: user.plan?.name ?? null };
+  return {
+    email: user.email,
+    name: user.name,
+    planName: user.plan?.name ?? null,
+    planSlug: user.plan?.slug ?? null,
+  };
 }

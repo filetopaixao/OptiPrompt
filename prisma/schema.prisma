@@ -34,6 +34,7 @@ enum ExecutionStatus {
 /// assinaturas — ver src/lib/credits/provider-allocation.ts.
 enum CreditProvider {
   ANTHROPIC
+  GOOGLE
   MARITACA
 }
 

@@ -15,12 +15,16 @@ export function LandingHero() {
           </span>
           <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
             Reduza em média <span className="font-extrabold text-primary">60%</span> os custos
-            das suas LLMs
+            das suas LLMs.
           </h1>
           <p className="max-w-xl text-balance text-lg text-muted-foreground">
-            O OptiPrompt entrega o Raio-X do seu consumo: rastreie o custo em Reais, o gasto de
-            tokens e a latência de cada prompt específico em tempo real, sem depender de devs
-            para monitorar a operação.
+            O ambiente definitivo de AI FinOps. Execute testes A/B de prompts para comparar
+            qualidade, custos e latência lado a lado. Acesse OpenAI, Anthropic e Google em uma
+            única plataforma —{" "}
+            <span className="font-semibold text-foreground">
+              sem precisar de contas pagas ou chaves de API separadas para cada provedor
+            </span>
+            .
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <a href="#planos" className={buttonVariants({ size: "lg" })}>

@@ -6,10 +6,11 @@ import { markProviderAllocationsCompleted } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-const PROVIDERS = ["ANTHROPIC", "MARITACA"] as const;
+const PROVIDERS = ["ANTHROPIC", "GOOGLE", "MARITACA"] as const;
 
 const PROVIDER_LABEL: Record<(typeof PROVIDERS)[number], string> = {
   ANTHROPIC: "Anthropic",
+  GOOGLE: "Google AI",
   MARITACA: "Maritaca AI",
 };
 
@@ -33,13 +34,13 @@ export default async function CreditosAdminPage() {
       <div>
         <h2 className="text-lg font-semibold">Recarga pendente nos provedores</h2>
         <p className="text-sm text-muted-foreground">
-          20% de cada pagamento de assinatura confirmado, dividido 50/50 entre os dois
-          provedores. Nenhum expõe API de recarga de saldo — confirme aqui só depois de
+          20% de cada pagamento de assinatura confirmado, dividido em partes iguais entre os
+          três provedores. Nenhum expõe API de recarga de saldo — confirme aqui só depois de
           recarregar manualmente no painel de cada um.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {PROVIDERS.map((provider) => {
           const entry = pending.find((p) => p.provider === provider);
           const totalInCents = entry?._sum.amountInCents ?? 0;

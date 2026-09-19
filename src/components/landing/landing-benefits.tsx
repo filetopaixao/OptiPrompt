@@ -10,9 +10,9 @@ const BENEFITS = [
   },
   {
     icon: Activity,
-    title: "Métricas de Latência & Gargalos",
+    title: "Latência e Tempo de Resposta",
     description:
-      "Identifique na hora se a lentidão na resposta vem do provedor de LLM ou do seu próprio código.",
+      "Descubra instantaneamente qual modelo de IA responde mais rápido e garanta automações ágeis e sem atrasos para os seus clientes.",
   },
   {
     icon: GitCompare,

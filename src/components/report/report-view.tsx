@@ -11,7 +11,13 @@ import { ReportVerdict } from "./report-verdict";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeStyle: "short" });
 
-export function ReportView({ execution }: { execution: ExecutionDTO }) {
+export function ReportView({
+  execution,
+  allowWhitelabelLogo,
+}: {
+  execution: ExecutionDTO;
+  allowWhitelabelLogo: boolean;
+}) {
   return (
     <div className="mx-auto max-w-4xl p-6 sm:p-10 print:p-0">
       <div className="mb-4 flex justify-end print:hidden">
@@ -32,7 +38,7 @@ export function ReportView({ execution }: { execution: ExecutionDTO }) {
             Executado em {dateFormatter.format(new Date(execution.createdAt))}
           </p>
         </div>
-        <ReportLogo />
+        {allowWhitelabelLogo && <ReportLogo />}
       </header>
 
       <section className="mb-8">
@@ -69,11 +75,18 @@ export function ReportView({ execution }: { execution: ExecutionDTO }) {
         </div>
       </section>
 
-      <section className="break-inside-avoid">
+      <section className="mb-8 break-inside-avoid">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Projeção financeira
         </h2>
-        <CostProjection results={execution.results} />
+        <CostProjection results={execution.results} priority="price" />
+      </section>
+
+      <section className="break-inside-avoid">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Comparação de velocidade
+        </h2>
+        <CostProjection results={execution.results} priority="speed" />
       </section>
 
       <footer className="mt-10 border-t pt-4 text-center text-xs text-muted-foreground">

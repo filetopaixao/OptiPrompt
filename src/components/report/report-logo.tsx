@@ -8,8 +8,10 @@ const STORAGE_KEY = "optiprompt:agency-logo";
 
 /**
  * Whitelabel simples: guarda o logo da agência no navegador (localStorage).
- * Sem sistema de conta ainda, então é por navegador, não por usuário — migrar
- * para o perfil da conta quando houver autenticação.
+ * Feature exclusiva do plano Enterprise — o gate fica em ReportView, que só
+ * renderiza este componente para quem tem o plano certo (ver planSlug em
+ * requireActiveSubscription). Ainda é por navegador, não por conta — migrar
+ * pro perfil do usuário se isso virar um problema real.
  */
 export function ReportLogo() {
   const [logo, setLogo] = useState<string | null>(null);

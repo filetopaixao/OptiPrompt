@@ -11,7 +11,7 @@ export default async function ReportPage({
 }: {
   params: Promise<{ executionId: string }>;
 }) {
-  await requireActiveSubscription();
+  const user = await requireActiveSubscription();
 
   const { executionId } = await params;
   const userId = await getCurrentUserId();
@@ -19,5 +19,5 @@ export default async function ReportPage({
 
   if (!execution) notFound();
 
-  return <ReportView execution={execution} />;
+  return <ReportView execution={execution} allowWhitelabelLogo={user.planSlug === "agencia"} />;
 }
