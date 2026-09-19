@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db/prisma";
 import { getStripeClient, mapStripeSubscriptionStatus } from "@/lib/stripe/client";
-import { allocateProviderCredits } from "@/lib/credits/provider-allocation";
 import { CREDIT_PACK_AMOUNT } from "@/lib/credits/credit-pack";
+import { syncOpenRouterLimit } from "@/lib/openrouter/client";
 
 /** Pacote avulso de créditos: pagamento único, sem assinatura envolvida.
  * Idempotente via CreditPackPurchase.stripeSessionId (reentrega do webhook
@@ -31,6 +31,8 @@ async function handleCreditPackPurchase(session: Stripe.Checkout.Session) {
       data: { bonusCredits: { increment: CREDIT_PACK_AMOUNT } },
     }),
   ]);
+
+  await syncOpenRouterLimit(userId);
 }
 
 async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session) {
@@ -54,6 +56,8 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
       subscriptionStatus: "ACTIVE",
     },
   });
+
+  await syncOpenRouterLimit(userId);
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
@@ -62,24 +66,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   } else {
     await handleSubscriptionCheckoutCompleted(session);
   }
-}
-
-/** Dispara em toda fatura paga da assinatura — a primeira e cada renovação —
- * cobrindo o ciclo completo de vida do pagamento (checkout.session.completed
- * só cobre a primeira). */
-async function handleInvoicePaid(invoice: Stripe.Invoice, eventId: string) {
-  const customerId =
-    typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
-  if (!customerId || invoice.amount_paid <= 0) return;
-
-  const user = await prisma.user.findUnique({ where: { stripeCustomerId: customerId } });
-  if (!user) return;
-
-  await allocateProviderCredits({
-    userId: user.id,
-    stripeEventId: eventId,
-    amountPaidInCents: invoice.amount_paid,
-  });
 }
 
 async function handleSubscriptionChanged(subscription: Stripe.Subscription) {
@@ -121,9 +107,6 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed":
       await handleCheckoutCompleted(event.data.object);
-      break;
-    case "invoice.paid":
-      await handleInvoicePaid(event.data.object, event.id);
       break;
     case "customer.subscription.updated":
     case "customer.subscription.deleted":

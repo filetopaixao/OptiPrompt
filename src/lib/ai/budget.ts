@@ -44,12 +44,13 @@ export async function planExecutionBudget(
 ): Promise<BudgetPlanResult> {
   const availableBRL = creditsToBRL(creditsAvailable);
 
-  const inputTokensByModel = await Promise.all(
-    modelIds.map((modelId) => countInputTokens(modelId, systemPrompt, userMessage)),
-  );
+  // O mesmo texto gera a mesma contagem de tokens independente do modelo
+  // (tokenizer único desde a migração pro OpenRouter — ver token-counter.ts),
+  // então basta contar uma vez e reaproveitar pra todos.
+  const inputTokens = await countInputTokens(systemPrompt, userMessage);
 
   const inputCostsInBRL = modelIds.map(
-    (modelId, i) => (inputTokensByModel[i] / 1000) * MODEL_PRICING[modelId].inputPricePer1k,
+    (modelId) => (inputTokens / 1000) * MODEL_PRICING[modelId].inputPricePer1k,
   );
   const totalInputCostInBRL = inputCostsInBRL.reduce((sum, cost) => sum + cost, 0);
 
@@ -76,7 +77,7 @@ export async function planExecutionBudget(
 
     return {
       modelId,
-      inputTokens: inputTokensByModel[i],
+      inputTokens,
       inputCostInBRL: inputCostsInBRL[i],
       maxOutputTokens,
     };

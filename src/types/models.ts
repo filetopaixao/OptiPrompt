@@ -2,8 +2,16 @@
  * Catálogo estático dos modelos suportados pela plataforma.
  * Fonte única de verdade para IDs de modelo — usada pelo motor de execução
  * (back-end) e pelos seletores de modelo (front-end).
+ *
+ * Toda chamada passa pelo OpenRouter (ver src/lib/openrouter e
+ * src/lib/ai/adapters/openrouter.adapter.ts) — os IDs abaixo usam a
+ * convenção `provider/modelo` exigida pela API deles, não o ID nativo de
+ * cada provedor. "Provider" aqui vira só um agrupamento visual da UI.
  */
 
+/** MARITACA fica no tipo só por compatibilidade com execuções históricas no
+ * banco (de antes da migração pro OpenRouter, que não tem modelos Sabiá) —
+ * nenhum modelo novo usa esse provider. */
 export type Provider = "OPENAI" | "ANTHROPIC" | "GOOGLE" | "MARITACA" | "GROQ";
 
 export type ModelTier = "PREMIUM" | "COST_EFFECTIVE";
@@ -20,70 +28,37 @@ export interface ModelDefinition {
 }
 
 export const MODEL_CATALOG: readonly ModelDefinition[] = [
-  { id: "gpt-4o", provider: "OPENAI", tier: "PREMIUM", label: "GPT-4o" },
-  { id: "gpt-4o-mini", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-4o mini" },
-  // claude-3-opus-20240229, claude-3-5-sonnet-20240620 e claude-3-haiku-20240307
-  // foram desativados pela Anthropic (404 model not found, confirmado direto
-  // na API) — substituídos pela geração atual dos mesmos tiers.
+  { id: "openai/gpt-4o", provider: "OPENAI", tier: "PREMIUM", label: "GPT-4o" },
+  { id: "openai/gpt-4o-mini", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-4o mini" },
+  { id: "anthropic/claude-opus-5", provider: "ANTHROPIC", tier: "PREMIUM", label: "Claude Opus 5" },
+  { id: "anthropic/claude-sonnet-5", provider: "ANTHROPIC", tier: "PREMIUM", label: "Claude Sonnet 5" },
   {
-    id: "claude-opus-5",
-    provider: "ANTHROPIC",
-    tier: "PREMIUM",
-    label: "Claude Opus 5",
-  },
-  {
-    id: "claude-sonnet-5",
-    provider: "ANTHROPIC",
-    tier: "PREMIUM",
-    label: "Claude Sonnet 5",
-  },
-  {
-    id: "claude-haiku-4-5-20251001",
+    id: "anthropic/claude-haiku-4.5",
     provider: "ANTHROPIC",
     tier: "COST_EFFECTIVE",
     label: "Claude Haiku 4.5",
   },
-  // Gemini 1.5 foi desativado pela Google — usamos os aliases "-latest", que
-  // sempre apontam para o modelo estável mais atual da respectiva categoria,
-  // evitando quebrar de novo a cada descontinuação de versão.
+  // Ainda não existe uma "google/gemini-3-pro" estável no OpenRouter — o
+  // tier Pro atual é servido como preview (confirmado via GET /api/v1/models).
   {
-    id: "gemini-pro-latest",
+    id: "google/gemini-3.1-pro-preview",
     provider: "GOOGLE",
     tier: "PREMIUM",
     label: "Gemini Pro",
-    // "gemini-3.5-pro" foi pedido mas NÃO existe na API da Google (confirmado
-    // via ListModels em produção) — aplicamos o selo no alias Premium real.
-    promoTag: "O novo Premium do Google",
   },
-  // gemini-flash-latest ficou instável sob alta demanda (503 sustentado,
-  // confirmado direto na API) — gemini-flash-lite-latest respondeu normal.
-  { id: "gemini-flash-lite-latest", provider: "GOOGLE", tier: "COST_EFFECTIVE", label: "Gemini Flash Lite" },
+  { id: "google/gemini-3.5-flash-lite", provider: "GOOGLE", tier: "COST_EFFECTIVE", label: "Gemini Flash Lite" },
   {
-    id: "gemini-3.5-flash",
+    id: "google/gemini-3.8-flash",
     provider: "GOOGLE",
     tier: "COST_EFFECTIVE",
-    label: "Gemini 3.5 Flash",
+    label: "Gemini 3.8 Flash",
     promoTag: "O novo Custo-benefício matador",
   },
-  // sabia-3 foi descontinuado pela Maritaca — sabia-4 e sabiazinho-4 são os
-  // modelos atuais (confirmado via GET /api/models com a chave real).
-  { id: "sabia-4", provider: "MARITACA", tier: "PREMIUM", label: "Sabiá-4" },
-  { id: "sabiazinho-4", provider: "MARITACA", tier: "COST_EFFECTIVE", label: "Sabiázinho-4" },
-  // Llama 3 deixou de estar disponível no self-serve da Groq — usamos os
-  // modelos open-weight que a conta efetivamente acessa hoje (confirmado via
-  // GET /openai/v1/models com a chave real).
-  {
-    id: "openai/gpt-oss-120b",
-    provider: "GROQ",
-    tier: "PREMIUM",
-    label: "GPT-OSS 120B",
-  },
-  {
-    id: "openai/gpt-oss-20b",
-    provider: "GROQ",
-    tier: "COST_EFFECTIVE",
-    label: "GPT-OSS 20B",
-  },
+  // GPT-OSS continua agrupado como "GROQ" na UI (família open-weight) mesmo
+  // chamado via OpenRouter — o provedor de inferência real por baixo pode
+  // variar (Groq, Cerebras etc.), não afeta o app.
+  { id: "openai/gpt-oss-120b", provider: "GROQ", tier: "PREMIUM", label: "GPT-OSS 120B" },
+  { id: "openai/gpt-oss-20b", provider: "GROQ", tier: "COST_EFFECTIVE", label: "GPT-OSS 20B" },
 ] as const;
 
 export type ModelId = (typeof MODEL_CATALOG)[number]["id"];

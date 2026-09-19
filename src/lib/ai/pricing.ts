@@ -1,10 +1,13 @@
 /**
  * Tabela de preços por modelo, em R$ por 1.000 tokens.
- * Fonte única de verdade para o cálculo de custo — atualize aqui quando os
- * provedores mudarem preços, sem tocar nos adapters.
+ * Usada só pra ESTIMAR o orçamento antes de chamar o modelo (ver budget.ts,
+ * que injeta o max_tokens dinâmico) — o custo real debitado do usuário vem
+ * do `usage.cost` que o OpenRouter devolve em cada resposta (ver
+ * openrouter.adapter.ts), não desta tabela.
  *
- * Valores derivados da tabela oficial de preço por milhão de tokens (R$/1M
- * ÷ 1.000 = R$/1k, usado por calculateCostInBRL).
+ * Valores derivados do preço por token em USD que a própria API do
+ * OpenRouter expõe (GET /api/v1/models), convertidos pra R$/1k na mesma
+ * cotação usada no resto do app.
  */
 import type { ModelId } from "@/types/models";
 
@@ -16,18 +19,16 @@ export interface ModelPricing {
 }
 
 export const MODEL_PRICING: Record<ModelId, ModelPricing> = {
-  "gpt-4o": { inputPricePer1k: 0.01283, outputPricePer1k: 0.0513 },
-  "gpt-4o-mini": { inputPricePer1k: 0.00077, outputPricePer1k: 0.00308 },
-  "claude-opus-5": { inputPricePer1k: 0.02565, outputPricePer1k: 0.12825 },
-  "claude-sonnet-5": { inputPricePer1k: 0.01026, outputPricePer1k: 0.0513 },
-  "claude-haiku-4-5-20251001": { inputPricePer1k: 0.00513, outputPricePer1k: 0.02565 },
-  "gemini-pro-latest": { inputPricePer1k: 0.01026, outputPricePer1k: 0.06156 },
-  "gemini-flash-lite-latest": { inputPricePer1k: 0.00128, outputPricePer1k: 0.0077 },
-  "gemini-3.5-flash": { inputPricePer1k: 0.0077, outputPricePer1k: 0.04617 },
-  "sabia-4": { inputPricePer1k: 0.005, outputPricePer1k: 0.02 },
-  "sabiazinho-4": { inputPricePer1k: 0.001, outputPricePer1k: 0.004 },
-  "openai/gpt-oss-120b": { inputPricePer1k: 0.00077, outputPricePer1k: 0.00308 },
-  "openai/gpt-oss-20b": { inputPricePer1k: 0.00038, outputPricePer1k: 0.00154 },
+  "openai/gpt-4o": { inputPricePer1k: 0.012825, outputPricePer1k: 0.0513 },
+  "openai/gpt-4o-mini": { inputPricePer1k: 0.0007695, outputPricePer1k: 0.003078 },
+  "anthropic/claude-opus-5": { inputPricePer1k: 0.02565, outputPricePer1k: 0.12825 },
+  "anthropic/claude-sonnet-5": { inputPricePer1k: 0.01026, outputPricePer1k: 0.0513 },
+  "anthropic/claude-haiku-4.5": { inputPricePer1k: 0.00513, outputPricePer1k: 0.02565 },
+  "google/gemini-3.1-pro-preview": { inputPricePer1k: 0.01026, outputPricePer1k: 0.06156 },
+  "google/gemini-3.5-flash-lite": { inputPricePer1k: 0.001539, outputPricePer1k: 0.012825 },
+  "google/gemini-3.8-flash": { inputPricePer1k: 0.0038475, outputPricePer1k: 0.0192375 },
+  "openai/gpt-oss-120b": { inputPricePer1k: 0.0007695, outputPricePer1k: 0.003078 },
+  "openai/gpt-oss-20b": { inputPricePer1k: 0.0001539, outputPricePer1k: 0.0006669 },
 };
 
 export function calculateCostInBRL(

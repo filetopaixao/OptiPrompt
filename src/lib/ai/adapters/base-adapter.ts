@@ -1,7 +1,7 @@
-import { brlToCredits } from "@/lib/credits/credit-converter";
+import { brlToCredits, USD_TO_BRL_RATE } from "@/lib/credits/credit-converter";
 import { calculateCostInBRL } from "@/lib/ai/pricing";
 import { getModelDefinition } from "@/types/models";
-import type { ModelId, Provider, UnifiedModelResponse } from "@/types/models";
+import type { ModelId, UnifiedModelResponse } from "@/types/models";
 import type { ModelAdapter, ModelAdapterInput, ProviderCallResult } from "./types";
 
 const MAX_ATTEMPTS = 3;
@@ -28,8 +28,6 @@ function sleep(ms: number): Promise<void> {
  * Cada provedor só precisa implementar `callProvider`.
  */
 export abstract class BaseModelAdapter implements ModelAdapter {
-  abstract readonly provider: Provider;
-
   protected abstract callProvider(input: ModelAdapterInput): Promise<ProviderCallResult>;
 
   private async callWithRetry(input: ModelAdapterInput): Promise<ProviderCallResult> {
@@ -46,21 +44,23 @@ export abstract class BaseModelAdapter implements ModelAdapter {
   }
 
   async execute(input: ModelAdapterInput): Promise<UnifiedModelResponse> {
-    const { tier } = getModelDefinition(input.modelId);
+    const { provider, tier } = getModelDefinition(input.modelId);
     const startedAt = performance.now();
 
     try {
       const result = await this.callWithRetry(input);
       const latencyMs = Math.round(performance.now() - startedAt);
-      const estimatedCostInBRL = calculateCostInBRL(
-        input.modelId as ModelId,
-        result.promptTokens,
-        result.completionTokens,
-      );
+      // Custo real devolvido pelo OpenRouter (usage.cost) é preferido à
+      // estimativa da tabela estática — só cai pra estimativa se por algum
+      // motivo o campo vier ausente.
+      const estimatedCostInBRL =
+        result.actualCostUSD != null
+          ? Number((result.actualCostUSD * USD_TO_BRL_RATE).toFixed(6))
+          : calculateCostInBRL(input.modelId as ModelId, result.promptTokens, result.completionTokens);
 
       return {
         modelId: input.modelId,
-        provider: this.provider,
+        provider,
         tier,
         status: "SUCCESS",
         responseText: result.responseText,
@@ -75,7 +75,7 @@ export abstract class BaseModelAdapter implements ModelAdapter {
       const latencyMs = Math.round(performance.now() - startedAt);
       return {
         modelId: input.modelId,
-        provider: this.provider,
+        provider,
         tier,
         status: "ERROR",
         responseText: null,

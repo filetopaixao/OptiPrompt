@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { SubscriptionStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { syncOpenRouterLimit } from "@/lib/openrouter/client";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -67,6 +68,7 @@ export async function updateUserAccess(input: {
       subscriptionStatus: input.subscriptionStatus,
     },
   });
+  await syncOpenRouterLimit(input.userId);
 
   revalidatePath("/admin/usuarios");
   return { ok: true };
@@ -98,6 +100,7 @@ export async function grantBonusCredits(input: {
     where: { id: input.userId },
     data: { bonusCredits: { increment: Math.floor(input.amount) } },
   });
+  await syncOpenRouterLimit(input.userId);
 
   revalidatePath("/admin/usuarios");
   return { ok: true };

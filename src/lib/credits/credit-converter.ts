@@ -18,6 +18,15 @@ export function creditsToBRL(credits: number): number {
   return Number((credits * BRL_PER_CREDIT).toFixed(6));
 }
 
+/** Cotação usada em toda conversão USD↔BRL do app (ex.: teto de gasto
+ * provisionado no OpenRouter, ver src/lib/openrouter/client.ts) — não é
+ * buscada em tempo real, ajuste aqui se ela mudar muito. */
+export const USD_TO_BRL_RATE = 5.13;
+
+export function creditsToUSD(credits: number): number {
+  return Number((creditsToBRL(credits) / USD_TO_BRL_RATE).toFixed(6));
+}
+
 /** Teto mensal de créditos = 20% do valor da assinatura do plano, convertido
  * em créditos. Derivado do preço, não armazenado, para nunca dessincronizar.
  *

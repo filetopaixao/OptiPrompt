@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { toExecutionDTO } from "@/lib/executions/to-dto";
 import { runComparison } from "@/lib/ai/run-comparison";
 import { planExecutionBudget } from "@/lib/ai/budget";
+import { ensureOpenRouterApiKey } from "@/lib/openrouter/client";
 import { MODEL_CATALOG } from "@/types/models";
 
 const VALID_MODEL_IDS = MODEL_CATALOG.map((model) => model.id) as [string, ...string[]];
@@ -52,11 +53,14 @@ export async function POST(request: Request) {
         data: { userId, name: promptName?.trim() || "Prompt sem título" },
       });
 
+  const apiKey = await ensureOpenRouterApiKey(userId);
+
   const results = await runComparison({
     systemPrompt,
     userMessage,
     modelIds,
     budgetPlans: budgetPlan.plans,
+    apiKey,
   });
 
   const execution = await prisma.execution.create({

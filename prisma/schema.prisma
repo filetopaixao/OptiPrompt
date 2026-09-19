@@ -95,6 +95,13 @@ model User {
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
 
+  /// Chave OpenRouter provisionada automaticamente pra esta conta (ver
+  /// src/lib/openrouter/client.ts) — todas as execuções desse usuário usam
+  /// essa chave, com teto de gasto (`limit`) espelhando creditsTotal como
+  /// trava de segurança por baixo do sistema de créditos interno.
+  openRouterKeyHash String? @unique
+  openRouterApiKey  String? @unique
+
   prompts                   Prompt[]
   executions                Execution[]
   providerCreditAllocations ProviderCreditAllocation[]

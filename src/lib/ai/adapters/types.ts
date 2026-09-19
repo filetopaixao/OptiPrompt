@@ -1,4 +1,4 @@
-import type { ModelId, Provider, UnifiedModelResponse } from "@/types/models";
+import type { ModelId, UnifiedModelResponse } from "@/types/models";
 
 export interface ModelAdapterInput {
   modelId: ModelId;
@@ -8,22 +8,28 @@ export interface ModelAdapterInput {
    * planExecutionBudget (src/lib/ai/budget.ts) a partir do saldo restante
    * do usuário. Cai para MAX_OUTPUT_TOKENS (limits.ts) quando ausente. */
   maxOutputTokens?: number;
+  /** Chave OpenRouter própria do usuário que está executando — ver
+   * src/lib/openrouter/client.ts. */
+  apiKey: string;
 }
 
-/** O que cada provedor concreto precisa retornar — o resto (custo, latência,
- * status) é calculado pelo BaseModelAdapter, igual para todos os provedores. */
+/** O que o adapter concreto precisa retornar — o resto (tier, latência,
+ * status) é calculado pelo BaseModelAdapter. */
 export interface ProviderCallResult {
   responseText: string;
   promptTokens: number;
   completionTokens: number;
+  /** Custo real em USD que o OpenRouter devolveu pra essa chamada específica
+   * (campo `usage.cost` da resposta) — usado no lugar da estimativa da
+   * tabela estática sempre que presente (ver base-adapter.ts). */
+  actualCostUSD?: number;
 }
 
 /**
- * Strategy: cada provedor (OpenAI, Anthropic, Google, Maritaca) implementa
- * esta interface. O orquestrador (`run-comparison.ts`) depende apenas dela,
- * nunca de um SDK específico.
+ * Todo modelo passa pelo mesmo adapter concreto (OpenRouter) — a interface
+ * existe pra manter o orquestrador (`run-comparison.ts`) desacoplado de
+ * como a chamada é feita por baixo.
  */
 export interface ModelAdapter {
-  readonly provider: Provider;
   execute(input: ModelAdapterInput): Promise<UnifiedModelResponse>;
 }
