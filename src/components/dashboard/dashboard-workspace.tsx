@@ -15,24 +15,18 @@ import { PremiumWarningDialog } from "./premium-warning-dialog";
 import { PromptEditorPanel } from "./prompt-editor-panel";
 import { ResultsGrid } from "./results-grid";
 
-// Um modelo custo-benefício por família — cobre os 3 provedores "core" sem
-// disparar chamadas caras por padrão (GPT-OSS fica fora até o usuário marcar).
-const DEFAULT_MODEL_IDS: ModelId[] = [
-  "openai/gpt-4o-mini",
-  "anthropic/claude-haiku-4.5",
-  "google/gemini-3.5-flash-lite",
-];
-
 const SKIP_PREMIUM_WARNING_KEY = "optiprompt:skip-premium-warning";
 
-export function DashboardWorkspace() {
+export function DashboardWorkspace({ mostUsedModelIds }: { mostUsedModelIds: ModelId[] }) {
   const { applyUsage } = useUsageContext();
 
   const [promptName, setPromptName] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userMessage, setUserMessage] = useState("");
   const [rule, setRule] = useState("");
-  const [selectedModelIds, setSelectedModelIds] = useState<ModelId[]>(DEFAULT_MODEL_IDS);
+  // Vazio por padrão — obriga a escolha explícita do modelo em vez de rodar
+  // sem querer com uma seleção pré-marcada.
+  const [selectedModelIds, setSelectedModelIds] = useState<ModelId[]>([]);
   // Preço é o critério padrão — decisão de produto: impacto financeiro é o
   // que mais importa pra quem decide. Compartilhado entre o veredito e o
   // gráfico de projeção, que reagem juntos ao mesmo toggle.
@@ -118,6 +112,7 @@ export function DashboardWorkspace() {
         onRuleChange={setRule}
         selectedModelIds={selectedModelIds}
         onSelectedModelIdsChange={setSelectedModelIds}
+        mostUsedModelIds={mostUsedModelIds}
         onSubmit={handleSubmit}
         isRunning={isRunning}
       />

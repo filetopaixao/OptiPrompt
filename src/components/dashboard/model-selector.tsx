@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -24,10 +24,18 @@ const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "GROQ", "DE
 interface ModelSelectorProps {
   selectedModelIds: ModelId[];
   onChange: (modelIds: ModelId[]) => void;
+  /** Modelos mais usados pelo usuário (ver getMostUsedModelIds) — ganham um
+   * selo de destaque como atalho visual. */
+  mostUsedModelIds?: ModelId[];
   disabled?: boolean;
 }
 
-export function ModelSelector({ selectedModelIds, onChange, disabled }: ModelSelectorProps) {
+export function ModelSelector({
+  selectedModelIds,
+  onChange,
+  mostUsedModelIds = [],
+  disabled,
+}: ModelSelectorProps) {
   function toggle(modelId: ModelId, checked: boolean) {
     onChange(
       checked ? [...selectedModelIds, modelId] : selectedModelIds.filter((id) => id !== modelId),
@@ -46,8 +54,16 @@ export function ModelSelector({ selectedModelIds, onChange, disabled }: ModelSel
             <div className="flex flex-col gap-2">
               {models.map((model) => {
                 const inputId = `model-${model.id}`;
+                const isMostUsed = mostUsedModelIds.includes(model.id);
                 return (
-                  <div key={model.id} className="flex flex-col gap-1">
+                  <div
+                    key={model.id}
+                    className={
+                      isMostUsed
+                        ? "flex flex-col gap-1 rounded-md bg-amber-50 p-1.5 dark:bg-amber-500/10"
+                        : "flex flex-col gap-1"
+                    }
+                  >
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id={inputId}
@@ -55,8 +71,14 @@ export function ModelSelector({ selectedModelIds, onChange, disabled }: ModelSel
                         checked={selectedModelIds.includes(model.id)}
                         onCheckedChange={(checked) => toggle(model.id, checked === true)}
                       />
-                      <Label htmlFor={inputId} className="flex-1 cursor-pointer font-normal">
+                      <Label
+                        htmlFor={inputId}
+                        className="flex flex-1 cursor-pointer items-center gap-1 font-normal"
+                      >
                         {model.label}
+                        {isMostUsed && (
+                          <Star className="size-3 fill-amber-500 text-amber-500" aria-label="Mais usado" />
+                        )}
                       </Label>
                       <Badge variant={model.tier === "PREMIUM" ? "default" : "secondary"}>
                         {model.tier === "PREMIUM" ? "Premium" : "Custo-benefício"}
