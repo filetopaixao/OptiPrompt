@@ -29,6 +29,14 @@ export const MODEL_PRICING: Record<ModelId, ModelPricing> = {
   "google/gemini-3.8-flash": { inputPricePer1k: 0.0038475, outputPricePer1k: 0.0192375 },
   "openai/gpt-oss-120b": { inputPricePer1k: 0.0007695, outputPricePer1k: 0.003078 },
   "openai/gpt-oss-20b": { inputPricePer1k: 0.0001539, outputPricePer1k: 0.0006669 },
+  // Preço do endpoint específico da Groq (não o menor preço geral do
+  // modelo) — é o backend forçado via forceProvider em types/models.ts.
+  "meta-llama/llama-3.3-70b-instruct": { inputPricePer1k: 0.0030267, outputPricePer1k: 0.0040527 },
+  "meta-llama/llama-3.1-8b-instruct": { inputPricePer1k: 0.0002565, outputPricePer1k: 0.0004104 },
+  "deepseek/deepseek-v4-pro-0813": { inputPricePer1k: 0.002966, outputPricePer1k: 0.008898 },
+  "deepseek/deepseek-v3.2": { inputPricePer1k: 0.00137997, outputPricePer1k: 0.002052 },
+  "mistralai/mistral-medium-3-5": { inputPricePer1k: 0.007695, outputPricePer1k: 0.038475 },
+  "mistralai/mistral-small-3.2-24b-instruct": { inputPricePer1k: 0.00048094, outputPricePer1k: 0.0012825 },
 };
 
 export function calculateCostInBRL(

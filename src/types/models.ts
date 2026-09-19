@@ -12,7 +12,7 @@
 /** MARITACA fica no tipo só por compatibilidade com execuções históricas no
  * banco (de antes da migração pro OpenRouter, que não tem modelos Sabiá) —
  * nenhum modelo novo usa esse provider. */
-export type Provider = "OPENAI" | "ANTHROPIC" | "GOOGLE" | "MARITACA" | "GROQ";
+export type Provider = "OPENAI" | "ANTHROPIC" | "GOOGLE" | "MARITACA" | "GROQ" | "DEEPSEEK" | "MISTRAL";
 
 export type ModelTier = "PREMIUM" | "COST_EFFECTIVE";
 
@@ -25,6 +25,15 @@ export interface ModelDefinition {
   label: string;
   /** Selo promocional opcional (ex.: "O novo Premium do Google"). */
   promoTag?: string;
+  /** Força o OpenRouter a rotear pra esse backend específico (provider
+   * routing, ver openrouter.adapter.ts) — usado nos modelos Llama pra
+   * garantir que rodem na Groq mesmo com outros backends disponíveis. */
+  forceProvider?: string;
+  /** Desliga o "thinking" de modelos com raciocínio habilitado por padrão
+   * (ver openrouter.adapter.ts) — sem isso, um orçamento de max_tokens baixo
+   * (usuário com pouco saldo) é todo consumido em tokens de raciocínio
+   * invisíveis e a resposta visível volta vazia. */
+  disableReasoning?: boolean;
 }
 
 export const MODEL_CATALOG: readonly ModelDefinition[] = [
@@ -59,6 +68,57 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
   // variar (Groq, Cerebras etc.), não afeta o app.
   { id: "openai/gpt-oss-120b", provider: "GROQ", tier: "PREMIUM", label: "GPT-OSS 120B" },
   { id: "openai/gpt-oss-20b", provider: "GROQ", tier: "COST_EFFECTIVE", label: "GPT-OSS 20B" },
+  // Llama forçado a rodar na Groq (forceProvider) — confirmado via
+  // GET /api/v1/models/{id}/endpoints que a Groq serve esses dois; os
+  // modelos Llama 4 (Maverick/Scout) ainda não têm backend Groq no OpenRouter.
+  {
+    id: "meta-llama/llama-3.3-70b-instruct",
+    provider: "GROQ",
+    tier: "PREMIUM",
+    label: "Llama 3.3 70B",
+    forceProvider: "groq",
+  },
+  {
+    id: "meta-llama/llama-3.1-8b-instruct",
+    provider: "GROQ",
+    tier: "COST_EFFECTIVE",
+    label: "Llama 3.1 8B",
+    forceProvider: "groq",
+  },
+  // deepseek-v4-pro tem "thinking" habilitado por padrão (reasoning_effort
+  // "high") — sem disableReasoning, um orçamento de max_tokens baixo é todo
+  // consumido em tokens invisíveis e a resposta volta vazia (confirmado
+  // direto na API). deepseek-v4.1-flash não tem esse comportamento.
+  {
+    id: "deepseek/deepseek-v4-pro-0813",
+    provider: "DEEPSEEK",
+    tier: "PREMIUM",
+    label: "DeepSeek V4 Pro",
+    disableReasoning: true,
+  },
+  // v4.1-flash tem "reasoning" ligado por padrão e ignora reasoning.exclude
+  // em pelo menos um dos backends (confirmado: consumiu tokens de raciocínio
+  // mesmo com exclude:true e voltou vazio sob orçamento apertado) — v3.2 tem
+  // reasoning desligado por padrão e testou limpo no mesmo cenário.
+  {
+    id: "deepseek/deepseek-v3.2",
+    provider: "DEEPSEEK",
+    tier: "COST_EFFECTIVE",
+    label: "DeepSeek V3.2",
+  },
+  // Atenção ao ID: é "3-5" (hífen), não "3.5" — confirmado via GET
+  // /api/v1/models (a página de preços da Mistral usa "3.5", mas o slug do
+  // OpenRouter não).
+  { id: "mistralai/mistral-medium-3-5", provider: "MISTRAL", tier: "PREMIUM", label: "Mistral Medium 3.5" },
+  // mistral-small-2603 ("Mistral Small 4") deu 429 sustentado — rate limit
+  // compartilhado do OpenRouter com a Mistral pra esse modelo específico no
+  // momento do teste. 3.2-24b é a geração anterior, mas respondeu estável.
+  {
+    id: "mistralai/mistral-small-3.2-24b-instruct",
+    provider: "MISTRAL",
+    tier: "COST_EFFECTIVE",
+    label: "Mistral Small 3.2",
+  },
 ] as const;
 
 export type ModelId = (typeof MODEL_CATALOG)[number]["id"];

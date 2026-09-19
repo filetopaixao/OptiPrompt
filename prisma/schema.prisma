@@ -16,8 +16,12 @@ enum Provider {
   ANTHROPIC
   GOOGLE
   MARITACA
-  /// Modelos open-weight servidos pela Groq (ex.: GPT-OSS) — ver GROQ_API_KEY.
+  /// Modelos open-weight roteados via OpenRouter (GPT-OSS, Llama) — grupo
+  /// visual da UI, não implica que o backend de inferência seja literalmente
+  /// a Groq em todo modelo (só nos forçados via provider routing).
   GROQ
+  DEEPSEEK
+  MISTRAL
 }
 
 enum ModelTier {

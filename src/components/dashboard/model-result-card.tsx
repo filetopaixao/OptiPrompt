@@ -12,6 +12,8 @@ const PROVIDER_ACCENT: Record<Provider, string> = {
   GOOGLE: "bg-blue-500",
   MARITACA: "bg-violet-500",
   GROQ: "bg-sky-600",
+  DEEPSEEK: "bg-indigo-500",
+  MISTRAL: "bg-amber-500",
 };
 
 const PROVIDER_LABELS: Record<Provider, string> = {
@@ -20,6 +22,8 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   GOOGLE: "Google",
   MARITACA: "Maritaca AI",
   GROQ: "Groq",
+  DEEPSEEK: "DeepSeek",
+  MISTRAL: "Mistral",
 };
 
 export function ModelResultCard({ result }: { result: ExecutionResultDTO }) {

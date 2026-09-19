@@ -12,12 +12,14 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   GOOGLE: "Google",
   MARITACA: "Maritaca AI",
   GROQ: "Groq",
+  DEEPSEEK: "DeepSeek",
+  MISTRAL: "Mistral",
 };
 
 // MARITACA fica fora — sem modelos novos desde a migração pro OpenRouter
 // (ver comentário em types/models.ts), continua só no tipo por compatibilidade
 // com resultados históricos.
-const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "GROQ"];
+const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "GROQ", "DEEPSEEK", "MISTRAL"];
 
 interface ModelSelectorProps {
   selectedModelIds: ModelId[];
