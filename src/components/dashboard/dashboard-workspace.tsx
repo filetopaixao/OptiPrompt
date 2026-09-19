@@ -31,6 +31,7 @@ export function DashboardWorkspace() {
   const [promptName, setPromptName] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userMessage, setUserMessage] = useState("");
+  const [rule, setRule] = useState("");
   const [selectedModelIds, setSelectedModelIds] = useState<ModelId[]>(DEFAULT_MODEL_IDS);
   // Preço é o critério padrão — decisão de produto: impacto financeiro é o
   // que mais importa pra quem decide. Compartilhado entre o veredito e o
@@ -53,6 +54,7 @@ export function DashboardWorkspace() {
           systemPrompt,
           userMessage,
           modelIds: selectedModelIds,
+          rule: rule.trim() || undefined,
         }),
       });
 
@@ -67,8 +69,10 @@ export function DashboardWorkspace() {
       applyUsage(data.usage as UsageSummary);
       // Rola pro topo pra garantir que o veredito/relatório fique visível —
       // se o usuário rolou a página pra preencher um prompt longo, o
-      // resultado nasceria fora da área visível sem isso.
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // resultado nasceria fora da área visível sem isso. Instantâneo (sem
+      // "smooth") pra nunca ficar pela metade se o usuário mexer no scroll
+      // ou trocar de aba durante a animação.
+      window.scrollTo(0, 0);
     } catch {
       toast.error("Erro de rede ao executar a comparação. Tente novamente.");
     } finally {
@@ -110,6 +114,8 @@ export function DashboardWorkspace() {
         onSystemPromptChange={setSystemPrompt}
         userMessage={userMessage}
         onUserMessageChange={setUserMessage}
+        rule={rule}
+        onRuleChange={setRule}
         selectedModelIds={selectedModelIds}
         onSelectedModelIdsChange={setSelectedModelIds}
         onSubmit={handleSubmit}

@@ -25,6 +25,10 @@ export interface ExecutionResultDTO {
   latencyMs: number;
   estimatedCostInCredits: number;
   estimatedCostInBRL: number;
+  /** Veredito da regra de Execution.rule pra esta resposta — null quando a
+   * execução não tinha regra definida ou o modelo deu ERROR. */
+  ruleVerdict: "PASSED" | "FAILED" | null;
+  ruleReason: string | null;
 }
 
 export interface ExecutionDTO {
@@ -34,5 +38,8 @@ export interface ExecutionDTO {
   promptName: string;
   systemPrompt: string;
   userMessage: string;
+  /** Regra opcional em texto livre verificada em cada resposta (ver
+   * src/lib/ai/rule-checker.ts) — null quando não foi definida. */
+  rule: string | null;
   results: ExecutionResultDTO[];
 }

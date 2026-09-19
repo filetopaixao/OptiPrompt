@@ -17,6 +17,8 @@ interface PromptEditorPanelProps {
   onSystemPromptChange: (value: string) => void;
   userMessage: string;
   onUserMessageChange: (value: string) => void;
+  rule: string;
+  onRuleChange: (value: string) => void;
   selectedModelIds: ModelId[];
   onSelectedModelIdsChange: (modelIds: ModelId[]) => void;
   onSubmit: () => void;
@@ -30,6 +32,8 @@ export function PromptEditorPanel({
   onSystemPromptChange,
   userMessage,
   onUserMessageChange,
+  rule,
+  onRuleChange,
   selectedModelIds,
   onSelectedModelIdsChange,
   onSubmit,
@@ -76,6 +80,21 @@ export function PromptEditorPanel({
             onChange={(event) => onUserMessageChange(event.target.value)}
             disabled={isRunning}
           />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="rule">Regra a verificar (opcional)</Label>
+          <Textarea
+            id="rule"
+            placeholder='Ex.: A resposta não pode dizer que é uma IA.'
+            className="min-h-16 resize-y"
+            value={rule}
+            onChange={(event) => onRuleChange(event.target.value)}
+            disabled={isRunning}
+          />
+          <p className="text-xs text-muted-foreground">
+            Um modelo-juiz confere se cada resposta respeita essa regra — consome créditos extras.
+          </p>
         </div>
 
         <Separator />

@@ -15,6 +15,7 @@ export function toExecutionDTO(execution: ExecutionWithRelations): ExecutionDTO 
     promptName: execution.prompt.name,
     systemPrompt: execution.systemPrompt,
     userMessage: execution.userMessage,
+    rule: execution.rule,
     results: execution.results.map((result) => ({
       id: result.id,
       modelId: result.modelId,
@@ -28,6 +29,8 @@ export function toExecutionDTO(execution: ExecutionWithRelations): ExecutionDTO 
       latencyMs: result.latencyMs,
       estimatedCostInCredits: result.estimatedCostInCredits,
       estimatedCostInBRL: Number(result.estimatedCostInBRL),
+      ruleVerdict: result.ruleVerdict,
+      ruleReason: result.ruleReason,
     })),
   };
 }

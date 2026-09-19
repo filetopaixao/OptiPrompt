@@ -30,6 +30,14 @@ enum ExecutionStatus {
   ERROR
 }
 
+/// Veredito de uma regra opcional definida pelo usuário (ex.: "a resposta
+/// não pode dizer que é uma IA") — avaliado por um modelo-juiz depois da
+/// resposta principal, ver src/lib/ai/rule-checker.ts.
+enum RuleVerdict {
+  PASSED
+  FAILED
+}
+
 /// Provedor de IA cujo saldo é recarregado com a fatia da receita de
 /// assinaturas — ver src/lib/credits/provider-allocation.ts.
 enum CreditProvider {
@@ -141,6 +149,11 @@ model Execution {
   systemPrompt String @db.Text
   userMessage  String @db.Text
 
+  /// Regra opcional em texto livre, verificada em cada resposta por um
+  /// modelo-juiz (ver src/lib/ai/rule-checker.ts) — null quando o usuário
+  /// não definiu nenhuma pra essa execução.
+  rule String? @db.Text
+
   results ExecutionResult[]
 
   @@index([userId])
@@ -148,10 +161,10 @@ model Execution {
   @@map("executions")
 }
 
-/// Fatia da receita de cada pagamento de assinatura reservada para recarregar
-/// o saldo pré-pago da OptiPrompt nos provedores de IA. Nenhum dos dois
-/// (Anthropic, Maritaca) expõe API de recarga programática — este registro é
-/// o controle interno de quanto recarregar manualmente em cada um.
+/// Histórico de recargas de antes da migração pro OpenRouter, quando cada
+/// provedor de IA era pago separadamente — mantido só por compatibilidade
+/// com dados antigos (ver /admin/creditos). Nenhuma linha nova é criada
+/// desde a centralização (ver src/lib/openrouter/client.ts).
 model ProviderCreditAllocation {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -213,6 +226,12 @@ model ExecutionResult {
   // Custo real (para o motor de créditos) — nunca exibido diretamente na UI
   estimatedCostInBRL     Decimal @db.Decimal(10, 6)
   estimatedCostInCredits Int
+
+  /// Veredito da regra de Execution.rule pra esta resposta específica — null
+  /// quando a execução não tinha regra ou quando este resultado deu ERROR
+  /// (nada pra julgar).
+  ruleVerdict RuleVerdict?
+  ruleReason  String?      @db.Text
 
   @@index([executionId])
   @@map("execution_results")

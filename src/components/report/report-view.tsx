@@ -62,6 +62,12 @@ export function ReportView({
           <p className="mb-1 text-xs font-medium text-muted-foreground">User message</p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{execution.userMessage}</p>
         </div>
+        {execution.rule && (
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Regra verificada</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">{execution.rule}</p>
+          </div>
+        )}
       </section>
 
       <section className="mb-8 flex flex-col gap-3">

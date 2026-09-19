@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock, Hash } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Hash, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatBRLPrecise } from "@/lib/format-currency";
 import { getModelDefinition } from "@/types/models";
@@ -16,9 +16,21 @@ export function ReportResultCard({ result }: { result: ExecutionResultDTO }) {
     <div className="break-inside-avoid rounded-lg border p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="font-medium">{label}</span>
-        <Badge variant={result.tier === "PREMIUM" ? "default" : "secondary"}>
-          {result.tier === "PREMIUM" ? "Premium" : "Custo-benefício"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {result.ruleVerdict && (
+            <Badge variant={result.ruleVerdict === "PASSED" ? "default" : "destructive"}>
+              {result.ruleVerdict === "PASSED" ? (
+                <CheckCircle2 className="size-3" />
+              ) : (
+                <XCircle className="size-3" />
+              )}
+              {result.ruleVerdict === "PASSED" ? "Regra: passou" : "Regra: falhou"}
+            </Badge>
+          )}
+          <Badge variant={result.tier === "PREMIUM" ? "default" : "secondary"}>
+            {result.tier === "PREMIUM" ? "Premium" : "Custo-benefício"}
+          </Badge>
+        </div>
       </div>
 
       {result.status === "SUCCESS" ? (
@@ -27,6 +39,18 @@ export function ReportResultCard({ result }: { result: ExecutionResultDTO }) {
         <p className="flex items-start gap-1.5 text-sm text-destructive">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           {result.errorMessage ?? "Falha ao executar este modelo."}
+        </p>
+      )}
+
+      {result.ruleReason && (
+        <p
+          className={
+            result.ruleVerdict === "FAILED"
+              ? "mt-1 text-xs text-destructive"
+              : "mt-1 text-xs text-muted-foreground"
+          }
+        >
+          {result.ruleReason}
         </p>
       )}
 

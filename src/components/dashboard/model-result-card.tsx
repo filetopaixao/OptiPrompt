@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock, Hash } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Hash, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,7 +35,19 @@ export function ModelResultCard({ result }: { result: ExecutionResultDTO }) {
             {result.tier === "PREMIUM" ? "Premium" : "Custo-benefício"}
           </Badge>
         </div>
-        <span className="text-xs text-muted-foreground">{PROVIDER_LABELS[result.provider]}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{PROVIDER_LABELS[result.provider]}</span>
+          {result.ruleVerdict && (
+            <Badge variant={result.ruleVerdict === "PASSED" ? "default" : "destructive"}>
+              {result.ruleVerdict === "PASSED" ? (
+                <CheckCircle2 className="size-3" />
+              ) : (
+                <XCircle className="size-3" />
+              )}
+              {result.ruleVerdict === "PASSED" ? "Regra: passou" : "Regra: falhou"}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col gap-3 px-4">
@@ -49,6 +61,18 @@ export function ModelResultCard({ result }: { result: ExecutionResultDTO }) {
             </p>
           )}
         </ScrollArea>
+
+        {result.ruleReason && (
+          <p
+            className={
+              result.ruleVerdict === "FAILED"
+                ? "text-xs text-destructive"
+                : "text-xs text-muted-foreground"
+            }
+          >
+            {result.ruleReason}
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
