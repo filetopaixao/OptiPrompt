@@ -19,7 +19,7 @@ import { ResultsGrid } from "./results-grid";
 // disparar chamadas caras por padrão (Meta/Groq fica fora até o usuário marcar).
 const DEFAULT_MODEL_IDS: ModelId[] = [
   "gpt-4o-mini",
-  "claude-3-haiku-20240307",
+  "claude-haiku-4-5-20251001",
   "gemini-flash-lite-latest",
   "sabiazinho-4",
 ];

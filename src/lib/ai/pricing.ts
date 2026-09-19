@@ -18,9 +18,9 @@ export interface ModelPricing {
 export const MODEL_PRICING: Record<ModelId, ModelPricing> = {
   "gpt-4o": { inputPricePer1k: 0.01283, outputPricePer1k: 0.0513 },
   "gpt-4o-mini": { inputPricePer1k: 0.00077, outputPricePer1k: 0.00308 },
-  "claude-3-opus-20240229": { inputPricePer1k: 0.07695, outputPricePer1k: 0.38475 },
-  "claude-3-5-sonnet-20240620": { inputPricePer1k: 0.01539, outputPricePer1k: 0.07695 },
-  "claude-3-haiku-20240307": { inputPricePer1k: 0.00128, outputPricePer1k: 0.00641 },
+  "claude-opus-5": { inputPricePer1k: 0.02565, outputPricePer1k: 0.12825 },
+  "claude-sonnet-5": { inputPricePer1k: 0.01026, outputPricePer1k: 0.0513 },
+  "claude-haiku-4-5-20251001": { inputPricePer1k: 0.00513, outputPricePer1k: 0.02565 },
   "gemini-pro-latest": { inputPricePer1k: 0.01026, outputPricePer1k: 0.06156 },
   "gemini-flash-lite-latest": { inputPricePer1k: 0.00128, outputPricePer1k: 0.0077 },
   "gemini-3.5-flash": { inputPricePer1k: 0.0077, outputPricePer1k: 0.04617 },

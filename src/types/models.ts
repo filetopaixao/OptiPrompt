@@ -22,23 +22,26 @@ export interface ModelDefinition {
 export const MODEL_CATALOG: readonly ModelDefinition[] = [
   { id: "gpt-4o", provider: "OPENAI", tier: "PREMIUM", label: "GPT-4o" },
   { id: "gpt-4o-mini", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-4o mini" },
+  // claude-3-opus-20240229, claude-3-5-sonnet-20240620 e claude-3-haiku-20240307
+  // foram desativados pela Anthropic (404 model not found, confirmado direto
+  // na API) — substituídos pela geração atual dos mesmos tiers.
   {
-    id: "claude-3-opus-20240229",
+    id: "claude-opus-5",
     provider: "ANTHROPIC",
     tier: "PREMIUM",
-    label: "Claude 3 Opus",
+    label: "Claude Opus 5",
   },
   {
-    id: "claude-3-5-sonnet-20240620",
+    id: "claude-sonnet-5",
     provider: "ANTHROPIC",
     tier: "PREMIUM",
-    label: "Claude 3.5 Sonnet",
+    label: "Claude Sonnet 5",
   },
   {
-    id: "claude-3-haiku-20240307",
+    id: "claude-haiku-4-5-20251001",
     provider: "ANTHROPIC",
     tier: "COST_EFFECTIVE",
-    label: "Claude 3 Haiku",
+    label: "Claude Haiku 4.5",
   },
   // Gemini 1.5 foi desativado pela Google — usamos os aliases "-latest", que
   // sempre apontam para o modelo estável mais atual da respectiva categoria,

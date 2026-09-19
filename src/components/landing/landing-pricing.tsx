@@ -90,7 +90,7 @@ export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
       </p>
       <p className="mt-2 text-center text-xs text-muted-foreground">
         * O volume de testes estimado varia conforme o tamanho do prompt e os provedores
-        escolhidos (modelos premium como GPT-4o e Claude 3.5 Sonnet consomem mais créditos por
+        escolhidos (modelos premium como GPT-4o e Claude Sonnet 5 consomem mais créditos por
         execução).
       </p>
     </section>
