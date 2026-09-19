@@ -83,6 +83,8 @@ export default async function UsuariosAdminPage() {
                     planId: user.plan?.id ?? "",
                     subscriptionStatus: user.subscriptionStatus,
                     bonusCredits: user.bonusCredits,
+                    creditsAvailable,
+                    creditsTotal,
                   }}
                   plans={planOptions}
                 />

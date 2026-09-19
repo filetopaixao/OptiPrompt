@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { SubscriptionStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { getMonthlyCreditLimit } from "@/lib/credits/credit-converter";
 import { syncOpenRouterLimit } from "@/lib/openrouter/client";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -86,10 +87,10 @@ export async function resetUserCycle(userId: string): Promise<ActionResult> {
   return { ok: true };
 }
 
-/** Ajusta os créditos avulsos do usuário — aceita valores negativos pra
- * remover crédito já concedido. O resultado nunca fica abaixo de 0 (não dá
- * pra "dever" crédito avulso; pra reduzir abaixo do teto do plano, use o
- * campo de plano em vez deste). */
+/** Ajusta o LIMITE MÁXIMO do usuário (créditos avulsos, somam ao teto do
+ * plano) — aceita valores negativos pra remover crédito já concedido. O
+ * resultado nunca fica abaixo de 0. Isso muda o teto, não o saldo restante
+ * no ciclo atual — pra isso, ver adjustCurrentCredits. */
 export async function adjustBonusCredits(input: {
   userId: string;
   amount: number;
@@ -115,4 +116,48 @@ export async function adjustBonusCredits(input: {
 
   revalidatePath("/admin/usuarios");
   return { ok: true, newBonusCredits };
+}
+
+/** Ajusta o SALDO DISPONÍVEL AGORA, dentro do ciclo atual — sem mexer no
+ * teto (bonusCredits) nem no plano. Por baixo, isso é feito ao contrário:
+ * "dar" crédito agora reduz creditsUsedThisCycle (nunca abaixo de 0);
+ * "tirar" crédito agora aumenta creditsUsedThisCycle. Como o disponível é
+ * sempre teto - usado, dar mais do que já foi consumido neste ciclo trava
+ * no teto atual — pra abrir espaço além do teto, use adjustBonusCredits. */
+export async function adjustCurrentCredits(input: {
+  userId: string;
+  amount: number;
+}): Promise<ActionResult & { newCreditsAvailable?: number }> {
+  await requireAdmin();
+
+  const amount = Math.trunc(input.amount);
+  if (!Number.isFinite(amount) || amount === 0) {
+    return { ok: false, error: "Informe uma quantidade de créditos válida (positiva ou negativa)." };
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: input.userId },
+    select: {
+      creditsUsedThisCycle: true,
+      bonusCredits: true,
+      plan: { select: { priceInCents: true } },
+    },
+  });
+
+  const newCreditsUsedThisCycle = Math.max(0, user.creditsUsedThisCycle - amount);
+
+  await prisma.user.update({
+    where: { id: input.userId },
+    data: { creditsUsedThisCycle: newCreditsUsedThisCycle },
+  });
+  // Sem syncOpenRouterLimit aqui de propósito: o teto no OpenRouter reflete
+  // creditsTotal (plano + avulso), que não muda ao mexer só no consumo do
+  // ciclo — só adjustBonusCredits e updateUserAccess afetam esse número.
+
+  revalidatePath("/admin/usuarios");
+
+  const creditsTotal = (user.plan ? getMonthlyCreditLimit(user.plan.priceInCents) : 0) + user.bonusCredits;
+  const newCreditsAvailable = Math.max(0, creditsTotal - newCreditsUsedThisCycle);
+
+  return { ok: true, newCreditsAvailable };
 }

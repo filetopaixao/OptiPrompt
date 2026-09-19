@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { adjustBonusCredits, resetUserCycle, updateUserAccess } from "./actions";
+import { adjustBonusCredits, adjustCurrentCredits, resetUserCycle, updateUserAccess } from "./actions";
 
 const STATUS_OPTIONS: { value: SubscriptionStatus; label: string }[] = [
   { value: "ACTIVE", label: "Ativa" },
@@ -36,6 +36,8 @@ export function ManageUserDialog({
     planId: string;
     subscriptionStatus: SubscriptionStatus;
     bonusCredits: number;
+    creditsAvailable: number;
+    creditsTotal: number;
   };
   plans: { id: string; name: string }[];
 }) {
@@ -45,6 +47,7 @@ export function ManageUserDialog({
     user.subscriptionStatus,
   );
   const [bonusAmount, setBonusAmount] = useState("");
+  const [currentAmount, setCurrentAmount] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSaveAccess() {
@@ -70,7 +73,7 @@ export function ManageUserDialog({
     });
   }
 
-  function handleAdjustCredits() {
+  function handleAdjustBonus() {
     const amount = Number(bonusAmount);
     startTransition(async () => {
       const result = await adjustBonusCredits({ userId: user.id, amount });
@@ -78,8 +81,21 @@ export function ManageUserDialog({
         toast.error(result.error);
         return;
       }
-      toast.success(`Créditos avulsos agora: ${result.newBonusCredits!.toLocaleString("pt-BR")}.`);
+      toast.success(`Limite máximo (avulso) agora: ${result.newBonusCredits!.toLocaleString("pt-BR")}.`);
       setBonusAmount("");
+    });
+  }
+
+  function handleAdjustCurrent() {
+    const amount = Number(currentAmount);
+    startTransition(async () => {
+      const result = await adjustCurrentCredits({ userId: user.id, amount });
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(`Disponível agora: ${result.newCreditsAvailable!.toLocaleString("pt-BR")}.`);
+      setCurrentAmount("");
     });
   }
 
@@ -142,7 +158,37 @@ export function ManageUserDialog({
 
         <div className="flex flex-col gap-2 border-t pt-4">
           <Label>
-            Créditos avulsos{" "}
+            Créditos disponíveis agora{" "}
+            <span className="font-normal text-muted-foreground">
+              (atual: {user.creditsAvailable.toLocaleString("pt-BR")} de{" "}
+              {user.creditsTotal.toLocaleString("pt-BR")})
+            </span>
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              placeholder="Ex.: 5000 ou -5000"
+              value={currentAmount}
+              onChange={(e) => setCurrentAmount(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending || !currentAmount}
+              onClick={handleAdjustCurrent}
+            >
+              Aplicar
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Muda o saldo do ciclo atual sem tocar no teto. Positivo dá mais crédito agora, negativo
+            tira — não passa do limite máximo.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t pt-4">
+          <Label>
+            Limite máximo (avulso){" "}
             <span className="font-normal text-muted-foreground">
               (atual: {user.bonusCredits.toLocaleString("pt-BR")})
             </span>
@@ -158,13 +204,14 @@ export function ManageUserDialog({
               type="button"
               variant="outline"
               disabled={isPending || !bonusAmount}
-              onClick={handleAdjustCredits}
+              onClick={handleAdjustBonus}
             >
               Aplicar
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Use um número negativo pra remover crédito avulso já concedido.
+            Aumenta ou reduz o teto de créditos do usuário (soma ao plano). Negativo remove crédito
+            avulso já concedido.
           </p>
         </div>
 
