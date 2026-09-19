@@ -7,6 +7,7 @@ import { LandingHero } from "@/components/landing/landing-hero";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { LandingPricing } from "@/components/landing/landing-pricing";
 import { LandingTestimonials } from "@/components/landing/landing-testimonials";
+import { SubscriptionRequiredBanner } from "@/components/landing/subscription-required-banner";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +17,17 @@ export const metadata: Metadata = {
     "Descubra qual modelo de IA é mais barato antes de escalar sua operação. Compare custo, velocidade e qualidade entre GPT, Claude, Gemini e mais.",
 };
 
-export default async function AgenciasPage() {
-  const plans = await listPlans();
+export default async function AgenciasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ assinatura?: string }>;
+}) {
+  const [plans, { assinatura }] = await Promise.all([listPlans(), searchParams]);
 
   return (
     <div className="flex min-h-screen flex-col">
       <LandingNav />
+      {assinatura === "necessaria" && <SubscriptionRequiredBanner />}
       <main className="flex-1">
         <LandingHero />
         <LandingBenefits />

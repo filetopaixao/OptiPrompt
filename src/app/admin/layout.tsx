@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { ShieldAlert } from "lucide-react";
+import { LogOut, ShieldAlert } from "lucide-react";
+import { signOut } from "@/lib/auth/auth";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +21,18 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         <div className="flex items-center gap-2">
           <ShieldAlert className="size-5 text-primary" />
           <span className="font-semibold">OptiPrompt — Painel interno</span>
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/" });
+            }}
+            className="ml-auto"
+          >
+            <Button type="submit" variant="ghost" size="sm">
+              <LogOut />
+              Sair
+            </Button>
+          </form>
         </div>
         <nav className="flex gap-4 text-sm font-medium text-muted-foreground">
           {NAV_LINKS.map((link) => (

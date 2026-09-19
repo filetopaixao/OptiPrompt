@@ -36,7 +36,10 @@ async function handleCreditPackPurchase(session: Stripe.Checkout.Session) {
 async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
   const planId = session.metadata?.planId;
-  if (!userId) return;
+  // "unpaid" acontece quando o checkout é concluído mas o pagamento em si
+  // falha (ex.: 3DS pendente) — nesse caso não ativa; o webhook
+  // customer.subscription.updated que vem em seguida reflete o status real.
+  if (!userId || session.payment_status === "unpaid") return;
 
   const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
   const subscriptionId =

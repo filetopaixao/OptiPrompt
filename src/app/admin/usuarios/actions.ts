@@ -13,6 +13,7 @@ export async function createFreeUser(input: {
   name: string;
   email: string;
   planId: string;
+  initialCredits: number;
 }): Promise<ActionResult & { password?: string }> {
   await requireAdmin();
 
@@ -22,20 +23,30 @@ export async function createFreeUser(input: {
   if (!name || !email || !input.planId) {
     return { ok: false, error: "Preencha nome, e-mail e plano." };
   }
+  if (!Number.isFinite(input.initialCredits) || input.initialCredits < 0) {
+    return { ok: false, error: "Quantidade de créditos inválida." };
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return { ok: false, error: "Já existe uma conta com este e-mail." };
   }
 
-  // Senha temporária gerada pelo admin — exibida uma única vez na UI, o
-  // usuário deve trocá-la depois do primeiro login (sem fluxo de "esqueci
-  // minha senha" ainda, então isso é comunicado manualmente por enquanto).
+  // Senha temporária gerada pelo admin — exibida uma única vez na UI.
+  // mustChangePassword força a troca no primeiro login (ver /trocar-senha).
   const password = randomBytes(9).toString("base64url");
   const passwordHash = await bcrypt.hash(password, 12);
 
   await prisma.user.create({
-    data: { name, email, passwordHash, planId: input.planId, subscriptionStatus: "ACTIVE" },
+    data: {
+      name,
+      email,
+      passwordHash,
+      planId: input.planId,
+      subscriptionStatus: "ACTIVE",
+      mustChangePassword: true,
+      bonusCredits: Math.floor(input.initialCredits),
+    },
   });
 
   revalidatePath("/admin/usuarios");

@@ -23,8 +23,20 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
   const userId = await getCurrentUserId();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { email: true, name: true, subscriptionStatus: true, plan: { select: { name: true } } },
+    select: {
+      email: true,
+      name: true,
+      subscriptionStatus: true,
+      mustChangePassword: true,
+      plan: { select: { name: true } },
+    },
   });
+
+  // Senha provisória (conta criada pelo admin) — troca obrigatória antes de
+  // qualquer outra coisa, inclusive antes de checar assinatura.
+  if (user.mustChangePassword) {
+    redirect("/trocar-senha");
+  }
 
   if (user.subscriptionStatus !== "ACTIVE") {
     redirect("/?assinatura=necessaria");

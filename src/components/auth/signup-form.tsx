@@ -52,6 +52,19 @@ export function SignupForm({ planSlug }: { planSlug: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planSlug }),
       });
+
+      // Se a sessão recém-criada não foi reconhecida (ex.: cookie ainda não
+      // propagado), getCurrentUserId() redireciona pro /login — o fetch segue
+      // esse redirect e devolve a página HTML de login em vez de JSON, o que
+      // faria response.json() explodir e cair no catch genérico de "erro de
+      // rede", mascarando o problema real. Detecta isso pelo content-type.
+      const isJson = checkoutResponse.headers.get("content-type")?.includes("application/json");
+      if (!isJson) {
+        toast.error("Conta criada! Faça login para continuar para o pagamento.");
+        router.push("/login");
+        return;
+      }
+
       const checkoutData = await checkoutResponse.json();
 
       if (!checkoutResponse.ok) {
@@ -62,7 +75,7 @@ export function SignupForm({ planSlug }: { planSlug: string }) {
 
       window.location.href = checkoutData.checkoutUrl;
     } catch {
-      toast.error("Erro de rede ao criar a conta.");
+      toast.error("Erro de rede. Tente novamente em instantes.");
     } finally {
       setIsLoading(false);
     }

@@ -23,6 +23,7 @@ export function CreateUserDialog({ plans }: { plans: { id: string; name: string 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [planId, setPlanId] = useState(plans[0]?.id ?? "");
+  const [initialCredits, setInitialCredits] = useState("0");
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -32,13 +33,19 @@ export function CreateUserDialog({ plans }: { plans: { id: string; name: string 
     setName("");
     setEmail("");
     setPlanId(plans[0]?.id ?? "");
+    setInitialCredits("0");
     setGeneratedPassword(null);
     setCopied(false);
   }
 
   function handleSubmit() {
     startTransition(async () => {
-      const result = await createFreeUser({ name, email, planId });
+      const result = await createFreeUser({
+        name,
+        email,
+        planId,
+        initialCredits: Number(initialCredits) || 0,
+      });
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -91,7 +98,7 @@ export function CreateUserDialog({ plans }: { plans: { id: string; name: string 
               <DialogTitle>Criar usuário com acesso grátis</DialogTitle>
               <DialogDescription>
                 Cria a conta já ativa, sem passar pelo Stripe. Uma senha temporária é gerada
-                automaticamente.
+                automaticamente e o usuário será obrigado a trocá-la no primeiro login.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-3">
@@ -126,6 +133,16 @@ export function CreateUserDialog({ plans }: { plans: { id: string; name: string 
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="create-user-credits">Créditos extras (avulsos, não vencem)</Label>
+                <Input
+                  id="create-user-credits"
+                  type="number"
+                  min={0}
+                  value={initialCredits}
+                  onChange={(e) => setInitialCredits(e.target.value)}
+                />
               </div>
             </div>
             <DialogFooter>

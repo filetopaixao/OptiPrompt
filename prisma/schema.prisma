@@ -71,8 +71,11 @@ model User {
   name         String?
   /// Hash bcrypt — null só para linhas legadas anteriores ao login real.
   passwordHash String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  /// Senha provisória definida pelo admin (ver admin/usuarios) — força a
+  /// troca no próximo acesso antes de liberar qualquer rota de /app.
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   planId String?
   plan   Plan?   @relation(fields: [planId], references: [id])
