@@ -24,7 +24,7 @@ export function VersionCompareDialog({
 }: VersionCompareDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] sm:max-w-3xl">
+      <DialogContent className="max-h-[85vh] sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Comparação de versões</DialogTitle>
           <DialogDescription>
