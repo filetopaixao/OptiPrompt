@@ -1,5 +1,6 @@
-import { ArrowRight, MonitorPlay } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { DemoVideoDialog } from "./demo-video-dialog";
 import { HeroSlider } from "./hero-slider";
 
 export function LandingHero() {
@@ -31,13 +32,7 @@ export function LandingHero() {
               Fazer Raio-X de Custos Grátis
               <ArrowRight />
             </a>
-            <a
-              href="#demo"
-              className={buttonVariants({ variant: "outline", size: "lg" })}
-            >
-              <MonitorPlay />
-              Ver Demonstração
-            </a>
+            <DemoVideoDialog />
           </div>
         </div>
 
