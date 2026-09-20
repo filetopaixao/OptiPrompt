@@ -42,4 +42,8 @@ export interface ExecutionDTO {
    * src/lib/ai/rule-checker.ts) — null quando não foi definida. */
   rule: string | null;
   results: ExecutionResultDTO[];
+  /** Quem rodou essa execução — só populado na visão agregada de equipe do
+   * dono Enterprise (ver listExecutionsForTeam). Ausente na listagem pessoal
+   * normal, onde já é implícito que é sempre o próprio usuário logado. */
+  executedBy?: { name: string | null; email: string };
 }

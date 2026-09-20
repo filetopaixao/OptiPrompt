@@ -11,9 +11,13 @@ import { VersionCompareDialog } from "./version-compare-dialog";
 export function HistoryExplorer({
   executions,
   canCompareVersions,
+  showingTeamHistory = false,
 }: {
   executions: ExecutionDTO[];
   canCompareVersions: boolean;
+  /** true quando é a visão agregada do dono Enterprise (ver
+   * listExecutionsForTeam) — inclui execuções da carteira de clientes. */
+  showingTeamHistory?: boolean;
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
@@ -50,6 +54,7 @@ export function HistoryExplorer({
             {canCompareVersions
               ? "Selecione duas execuções para comparar versões do prompt e sua performance."
               : "Acompanhe suas execuções anteriores."}
+            {showingTeamHistory && " Inclui execuções de toda a sua carteira de clientes."}
           </p>
         </div>
         {canCompareVersions ? (

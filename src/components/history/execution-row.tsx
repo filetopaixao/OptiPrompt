@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Clock, FileOutput, Hash, Layers, Wallet, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, FileOutput, Hash, Layers, User, Wallet, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,12 @@ export function ExecutionRow({ execution, isSelected, onToggle, selectable }: Ex
           <span className="text-xs text-muted-foreground">
             {dateFormatter.format(new Date(execution.createdAt))}
           </span>
+          {execution.executedBy && (
+            <Badge variant="outline" className="gap-1 text-xs font-normal">
+              <User className="size-3" />
+              {execution.executedBy.name || execution.executedBy.email}
+            </Badge>
+          )}
           {metrics.ruleSummary && (
             <Badge
               variant={metrics.ruleSummary === "PASSED" ? "default" : "destructive"}

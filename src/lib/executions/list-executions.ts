@@ -12,3 +12,22 @@ export async function listExecutionsForUser(userId: string): Promise<ExecutionDT
 
   return executions.map(toExecutionDTO);
 }
+
+/** Visão agregada pro dono de uma conta Enterprise: histórico dele mesmo +
+ * de todos os clientes que ele gerencia (ver User.managedByUserId), com
+ * cada execução marcando quem rodou (ExecutionDTO.executedBy) — pra ele
+ * acompanhar o que a carteira de clientes está testando. */
+export async function listExecutionsForTeam(ownerId: string): Promise<ExecutionDTO[]> {
+  const executions = await prisma.execution.findMany({
+    where: { OR: [{ userId: ownerId }, { user: { managedByUserId: ownerId } }] },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: {
+      prompt: { select: { name: true } },
+      results: true,
+      user: { select: { name: true, email: true } },
+    },
+  });
+
+  return executions.map(toExecutionDTO);
+}
