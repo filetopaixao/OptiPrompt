@@ -20,7 +20,9 @@ const runExecutionSchema = z.object({
   promptName: z.string().min(1).max(120).optional(),
   systemPrompt: z.string().max(20_000),
   userMessage: z.string().min(1).max(20_000),
-  modelIds: z.array(z.enum(VALID_MODEL_IDS)).min(1, "Selecione ao menos um modelo."),
+  // Comparar exige pelo menos 2 modelos — com 1 só não há veredito de
+  // vencedor pra gerar (ExecutiveSummary/CostProjection já exigiam isso).
+  modelIds: z.array(z.enum(VALID_MODEL_IDS)).min(2, "Selecione ao menos dois modelos para comparar."),
   /** Regra opcional em texto livre, verificada em cada resposta por um
    * modelo-juiz (ver src/lib/ai/rule-checker.ts). */
   rule: z.string().trim().max(2000).optional(),

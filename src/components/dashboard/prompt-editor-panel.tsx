@@ -37,6 +37,8 @@ const TRIGGER_ICON_CLASS = "**:data-[slot=accordion-trigger-icon]:size-6";
 // os componentes Input/Textarea globais usados no resto do app.
 const FIELD_CLASS = "border-foreground/20 focus-visible:ring-3 focus-visible:ring-primary/40";
 
+const MIN_MODELS_TO_COMPARE = 2;
+
 export function PromptEditorPanel({
   promptName,
   onPromptNameChange,
@@ -54,7 +56,11 @@ export function PromptEditorPanel({
   onSubmit,
   isRunning,
 }: PromptEditorPanelProps) {
-  const canSubmit = userMessage.trim().length > 0 && selectedModelIds.length > 0 && !isRunning;
+  // Comparar exige pelo menos 2 modelos — com 1 só não há o que comparar
+  // (ExecutiveSummary/CostProjection já assumiam isso, agora a UI barra
+  // antes de gastar crédito rodando uma execução que não gera veredito).
+  const hasEnoughModels = selectedModelIds.length >= MIN_MODELS_TO_COMPARE;
+  const canSubmit = userMessage.trim().length > 0 && hasEnoughModels && !isRunning;
 
   return (
     <div className="flex flex-col gap-4">
@@ -162,6 +168,11 @@ export function PromptEditorPanel({
           {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
           {isRunning ? "Executando…" : "Executar comparação"}
         </Button>
+        {!hasEnoughModels && !isRunning && (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Selecione ao menos {MIN_MODELS_TO_COMPARE} modelos para comparar.
+          </p>
+        )}
       </div>
     </div>
   );

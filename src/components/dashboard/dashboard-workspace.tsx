@@ -151,11 +151,13 @@ export function DashboardWorkspace({
               );
 
               return priority === "price" && !hasCostProjection ? (
-                <LockedFeatureCard
-                  title="Projeção de custo em escala"
-                  message="Disponível nos planos Agência (Pro) e Enterprise — projete o custo mensal de cada modelo no seu volume real de requisições."
-                  headerActions={exportReportButton}
-                />
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-end print:hidden">{exportReportButton}</div>
+                  <LockedFeatureCard
+                    message="Disponível nos planos Agência (Pro) e Enterprise — projete o custo mensal de cada modelo no seu volume real de requisições."
+                    previewContent={<CostProjection results={execution.results} priority={priority} />}
+                  />
+                </div>
               ) : (
                 <CostProjection
                   results={execution.results}

@@ -1,38 +1,33 @@
 import { Lock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 /**
- * Placeholder pra recursos travados por plano — mantém o mesmo "peso" visual
- * do card real (título + ação no header) em vez de simplesmente sumir com a
- * seção, e ainda funciona como nudge de upgrade pra quem já está engajado
- * no dashboard.
+ * Mostra o recurso de verdade (com dados reais) borrado ao fundo, com um
+ * cadeado por cima — dá pra perceber que a funcionalidade existe e o que ela
+ * faz, mas não dá pra ler nenhum número. Funciona bem melhor como incentivo
+ * de upgrade do que simplesmente esconder a seção inteira.
  */
 export function LockedFeatureCard({
-  title,
   message,
-  headerActions,
+  previewContent,
 }: {
-  title: string;
   message: string;
-  headerActions?: ReactNode;
+  previewContent: ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
-        <CardTitle className="flex items-center gap-2 text-muted-foreground">
-          <Lock className="size-4" />
-          {title}
-        </CardTitle>
-        {headerActions && <div className="print:hidden">{headerActions}</div>}
-      </CardHeader>
-      <CardContent className="flex flex-col items-start gap-3">
-        <p className="text-sm text-muted-foreground">{message}</p>
-        <a href="/app/billing" className={buttonVariants({ variant: "outline", size: "sm" })}>
+    <div className="relative h-96 overflow-hidden rounded-xl">
+      <div aria-hidden className="pointer-events-none h-full select-none overflow-hidden blur-xl">
+        {previewContent}
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80 p-6 text-center">
+        <Lock className="size-6 text-muted-foreground" />
+        <p className="text-sm font-semibold">Recurso bloqueado</p>
+        <p className="max-w-xs text-sm text-muted-foreground">{message}</p>
+        <a href="/app/billing" className={buttonVariants({ size: "sm" })}>
           Ver planos
         </a>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
