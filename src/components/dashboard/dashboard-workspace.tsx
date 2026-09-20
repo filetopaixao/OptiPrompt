@@ -8,7 +8,7 @@ import { computeWinner, type ComparisonPriority } from "@/lib/executions/insight
 import type { UsageSummary } from "@/lib/credits/usage-service";
 import { canUseCostProjection, getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
 import { getModelDefinition, type ModelId } from "@/types/models";
-import type { ExecutionDTO } from "@/types/execution";
+import type { ExecutionDTO, ExecutionResultDTO } from "@/types/execution";
 import { useUsageContext } from "./usage-context";
 import { CostProjection } from "./cost-projection";
 import { ExecutiveSummary } from "./executive-summary";
@@ -18,6 +18,47 @@ import { PromptEditorPanel } from "./prompt-editor-panel";
 import { ResultsGrid } from "./results-grid";
 
 const SKIP_PREMIUM_WARNING_KEY = "optiprompt:skip-premium-warning";
+
+/**
+ * Dados de EXEMPLO pro preview do card travado de "Projeção de custo em
+ * escala" — nunca os resultados reais. Um blur é só CSS: quem inspecionar o
+ * elemento e remover a classe veria o que estiver por trás, então o próprio
+ * conteúdo enviado ao navegador já precisa ser inofensivo.
+ */
+const SAMPLE_COST_PROJECTION_RESULTS: ExecutionResultDTO[] = [
+  {
+    id: "sample-1",
+    modelId: "openai/gpt-4o-mini",
+    provider: "OPENAI",
+    tier: "COST_EFFECTIVE",
+    status: "SUCCESS",
+    responseText: null,
+    errorMessage: null,
+    promptTokens: 120,
+    completionTokens: 340,
+    latencyMs: 900,
+    estimatedCostInCredits: 3,
+    estimatedCostInBRL: 0.003,
+    ruleVerdict: null,
+    ruleReason: null,
+  },
+  {
+    id: "sample-2",
+    modelId: "anthropic/claude-haiku-4.5",
+    provider: "ANTHROPIC",
+    tier: "COST_EFFECTIVE",
+    status: "SUCCESS",
+    responseText: null,
+    errorMessage: null,
+    promptTokens: 120,
+    completionTokens: 340,
+    latencyMs: 1400,
+    estimatedCostInCredits: 12,
+    estimatedCostInBRL: 0.012,
+    ruleVerdict: null,
+    ruleReason: null,
+  },
+];
 
 export function DashboardWorkspace({
   mostUsedModelIds,
@@ -154,8 +195,11 @@ export function DashboardWorkspace({
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-end print:hidden">{exportReportButton}</div>
                   <LockedFeatureCard
+                    featureName="Projeção de custo em escala"
                     message="Disponível nos planos Agência (Pro) e Enterprise — projete o custo mensal de cada modelo no seu volume real de requisições."
-                    previewContent={<CostProjection results={execution.results} priority={priority} />}
+                    previewContent={
+                      <CostProjection results={SAMPLE_COST_PROJECTION_RESULTS} priority="price" />
+                    }
                   />
                 </div>
               ) : (

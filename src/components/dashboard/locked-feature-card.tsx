@@ -3,26 +3,31 @@ import { buttonVariants } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 /**
- * Mostra o recurso de verdade (com dados reais) borrado ao fundo, com um
- * cadeado por cima — dá pra perceber que a funcionalidade existe e o que ela
- * faz, mas não dá pra ler nenhum número. Funciona bem melhor como incentivo
- * de upgrade do que simplesmente esconder a seção inteira.
+ * Mostra um preview (com dados de EXEMPLO, nunca os reais do usuário — ver
+ * chamada em dashboard-workspace.tsx) levemente borrado ao fundo, com um
+ * cadeado por cima nomeando o recurso bloqueado. Dá pra perceber o que a
+ * funcionalidade faz sem revelar número nenhum de verdade — importante
+ * porque um blur é só CSS: quem abrir o DevTools e remover a classe via
+ * inspecionar elemento veria o conteúdo por trás dele. Por isso o preview
+ * nunca pode carregar os dados reais da execução, só uma amostra fake.
  */
 export function LockedFeatureCard({
+  featureName,
   message,
   previewContent,
 }: {
+  featureName: string;
   message: string;
   previewContent: ReactNode;
 }) {
   return (
     <div className="relative h-96 overflow-hidden rounded-xl">
-      <div aria-hidden className="pointer-events-none h-full select-none overflow-hidden blur-md">
+      <div aria-hidden className="pointer-events-none h-full select-none overflow-hidden blur-sm">
         {previewContent}
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/45 p-6 text-center backdrop-blur-[1px]">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/55 p-6 text-center">
         <Lock className="size-6 text-muted-foreground" />
-        <p className="text-sm font-semibold">Recurso bloqueado</p>
+        <p className="text-sm font-semibold">{featureName} bloqueada</p>
         <p className="max-w-xs text-sm text-muted-foreground">{message}</p>
         <a href="/app/billing" className={buttonVariants({ size: "sm" })}>
           Ver planos
