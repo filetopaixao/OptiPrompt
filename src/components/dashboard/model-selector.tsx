@@ -27,6 +27,12 @@ interface ModelSelectorProps {
   /** Modelos mais usados pelo usuário (ver getMostUsedModelIds) — ganham um
    * selo de destaque como atalho visual. */
   mostUsedModelIds?: ModelId[];
+  /** Catálogo visível pro plano do usuário (ver getAllowedModelIds) — o
+   * Starter só vê um subconjunto, os demais planos veem tudo. */
+  allowedModelIds: ModelId[];
+  /** Teto de seleção simultânea do plano (Infinity quando não há limite) —
+   * ao atingir, os checkboxes ainda não marcados ficam desabilitados. */
+  maxSelectable: number;
   disabled?: boolean;
 }
 
@@ -34,8 +40,12 @@ export function ModelSelector({
   selectedModelIds,
   onChange,
   mostUsedModelIds = [],
+  allowedModelIds,
+  maxSelectable,
   disabled,
 }: ModelSelectorProps) {
+  const atSelectionLimit = selectedModelIds.length >= maxSelectable;
+
   function toggle(modelId: ModelId, checked: boolean) {
     onChange(
       checked ? [...selectedModelIds, modelId] : selectedModelIds.filter((id) => id !== modelId),
@@ -44,8 +54,16 @@ export function ModelSelector({
 
   return (
     <div className="flex flex-col gap-4">
+      {Number.isFinite(maxSelectable) && (
+        <p className="text-xs text-muted-foreground">
+          Seu plano permite comparar até {maxSelectable} modelos por vez.
+        </p>
+      )}
       {PROVIDER_ORDER.map((provider) => {
-        const models = MODEL_CATALOG.filter((model) => model.provider === provider);
+        const models = MODEL_CATALOG.filter(
+          (model) => model.provider === provider && allowedModelIds.includes(model.id),
+        );
+        if (models.length === 0) return null;
         return (
           <div key={provider} className="flex flex-col gap-2">
             <span className="text-xs font-medium text-muted-foreground">
@@ -55,6 +73,8 @@ export function ModelSelector({
               {models.map((model) => {
                 const inputId = `model-${model.id}`;
                 const isMostUsed = mostUsedModelIds.includes(model.id);
+                const isSelected = selectedModelIds.includes(model.id);
+                const isCheckboxDisabled = disabled || (!isSelected && atSelectionLimit);
                 return (
                   <div
                     key={model.id}
@@ -67,13 +87,17 @@ export function ModelSelector({
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id={inputId}
-                        disabled={disabled}
-                        checked={selectedModelIds.includes(model.id)}
+                        disabled={isCheckboxDisabled}
+                        checked={isSelected}
                         onCheckedChange={(checked) => toggle(model.id, checked === true)}
                       />
                       <Label
                         htmlFor={inputId}
-                        className="flex flex-1 cursor-pointer items-center gap-1 font-normal"
+                        className={
+                          isCheckboxDisabled
+                            ? "flex flex-1 items-center gap-1 font-normal opacity-50"
+                            : "flex flex-1 cursor-pointer items-center gap-1 font-normal"
+                        }
                       >
                         {model.label}
                         {isMostUsed && (

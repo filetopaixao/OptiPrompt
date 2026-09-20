@@ -9,6 +9,7 @@ import { planExecutionBudget } from "@/lib/ai/budget";
 import { ensureOpenRouterApiKey } from "@/lib/openrouter/client";
 import { checkRule } from "@/lib/ai/rule-checker";
 import { brlToCredits, USD_TO_BRL_RATE } from "@/lib/credits/credit-converter";
+import { getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
 import { MODEL_CATALOG } from "@/types/models";
 import type { UnifiedModelResponse } from "@/types/models";
 
@@ -74,6 +75,28 @@ export async function POST(request: Request) {
   }
 
   const { promptId, promptName, systemPrompt, userMessage, modelIds, rule } = parsed.data;
+
+  // Trava por baixo do que a UI já restringe (ModelSelector) — nunca confiar
+  // só no que o cliente manda, alguém pode chamar a API direto.
+  const { plan } = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { plan: { select: { slug: true } } },
+  });
+  const allowedModelIds = getAllowedModelIds(plan?.slug ?? null);
+  const disallowedModelIds = modelIds.filter((modelId) => !allowedModelIds.includes(modelId));
+  if (disallowedModelIds.length > 0) {
+    return NextResponse.json(
+      { error: "Alguns modelos selecionados não estão disponíveis no seu plano." },
+      { status: 403 },
+    );
+  }
+  const maxSimultaneousModels = getMaxSimultaneousModels(plan?.slug ?? null);
+  if (modelIds.length > maxSimultaneousModels) {
+    return NextResponse.json(
+      { error: `Seu plano permite comparar até ${maxSimultaneousModels} modelos por vez.` },
+      { status: 403 },
+    );
+  }
 
   const usage = await getUsageSummary(userId);
   if (usage.isOverLimit) {

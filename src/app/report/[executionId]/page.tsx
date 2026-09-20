@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUserId } from "@/lib/auth/current-user";
 import { requireActiveSubscription } from "@/lib/auth/require-active-subscription";
 import { getExecutionById } from "@/lib/executions/get-execution";
+import { canUseCostProjection } from "@/lib/plans/model-access";
 import { ReportView } from "@/components/report/report-view";
 
 export const dynamic = "force-dynamic";
@@ -19,5 +20,11 @@ export default async function ReportPage({
 
   if (!execution) notFound();
 
-  return <ReportView execution={execution} allowWhitelabelLogo={user.planSlug === "agencia"} />;
+  return (
+    <ReportView
+      execution={execution}
+      allowWhitelabelLogo={user.planSlug === "agencia"}
+      allowCostProjection={canUseCostProjection(user.planSlug)}
+    />
+  );
 }

@@ -14,9 +14,15 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", time
 export function ReportView({
   execution,
   allowWhitelabelLogo,
+  allowCostProjection,
 }: {
   execution: ExecutionDTO;
   allowWhitelabelLogo: boolean;
+  /** "Projeção de custo em escala" — recurso dos planos Agência (Pro) e
+   * Enterprise. Quando não permitido, a seção some do relatório em vez de
+   * mostrar um aviso de upgrade — esse PDF vai pro cliente da agência, não
+   * é o lugar pra fazer upsell da própria plataforma. */
+  allowCostProjection: boolean;
 }) {
   return (
     <div className="mx-auto max-w-4xl p-6 sm:p-10 print:p-0">
@@ -81,12 +87,14 @@ export function ReportView({
         </div>
       </section>
 
-      <section className="mb-8 break-inside-avoid">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Projeção financeira
-        </h2>
-        <CostProjection results={execution.results} priority="price" />
-      </section>
+      {allowCostProjection && (
+        <section className="mb-8 break-inside-avoid">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Projeção financeira
+          </h2>
+          <CostProjection results={execution.results} priority="price" />
+        </section>
+      )}
 
       <section className="break-inside-avoid">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

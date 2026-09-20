@@ -13,6 +13,9 @@ interface ExecutionRowProps {
   execution: ExecutionDTO;
   isSelected: boolean;
   onToggle: () => void;
+  /** false quando o plano não inclui "Comparação de versões" — some o
+   * checkbox de seleção, a linha vira só uma entrada de consulta. */
+  selectable: boolean;
 }
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -20,7 +23,7 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
-export function ExecutionRow({ execution, isSelected, onToggle }: ExecutionRowProps) {
+export function ExecutionRow({ execution, isSelected, onToggle, selectable }: ExecutionRowProps) {
   const metrics = aggregateExecutionMetrics(execution);
   const inputId = `execution-${execution.id}`;
 
@@ -31,8 +34,14 @@ export function ExecutionRow({ execution, isSelected, onToggle }: ExecutionRowPr
         isSelected && "border-primary ring-1 ring-primary",
       )}
     >
-      <Checkbox id={inputId} checked={isSelected} onCheckedChange={onToggle} />
-      <Label htmlFor={inputId} className="flex flex-1 cursor-pointer flex-col gap-1 font-normal">
+      {selectable && <Checkbox id={inputId} checked={isSelected} onCheckedChange={onToggle} />}
+      <Label
+        htmlFor={inputId}
+        className={cn(
+          "flex flex-1 flex-col gap-1 font-normal",
+          selectable ? "cursor-pointer" : "cursor-default",
+        )}
+      >
         <div className="flex items-center gap-2">
           <span className="font-medium text-foreground">{execution.promptName}</span>
           <span className="text-xs text-muted-foreground">

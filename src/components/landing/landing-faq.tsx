@@ -28,7 +28,7 @@ function buildModelsAnswer(): string {
     return `${PROVIDER_LABELS[provider]} (${labels.join(", ")})`;
   }).filter((group): group is string => group !== null);
 
-  return `Hoje comparamos ${groups.join("; ")}.`;
+  return `Hoje comparamos ${groups.join("; ")}. O plano Starter tem acesso a um catálogo reduzido (uma opção de cada provedor, mais uma amostra Premium); os planos Agência (Pro) e Enterprise liberam a lista completa.`;
 }
 
 const FAQ_ITEMS = [

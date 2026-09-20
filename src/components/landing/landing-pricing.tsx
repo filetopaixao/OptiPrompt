@@ -13,19 +13,19 @@ const PLAN_TEST_ESTIMATE: Record<string, string> = {
 };
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  starter: ["Comparação simultânea em até 4 modelos", "Histórico de execuções", "Relatório PDF exportável"],
+  starter: [
+    "Comparação simultânea em até 4 modelos",
+    "Regra de verificação por IA-juiz",
+    "Histórico de execuções",
+    "Relatório PDF exportável",
+  ],
   pro: [
     "Tudo do Starter",
     "Todos os modelos e provedores liberados",
     "Projeção de custo em escala",
-    "Suporte prioritário",
+    "Comparação de versões (teste A/B de prompts)",
   ],
-  agencia: [
-    "Tudo do Agência (Pro)",
-    "Relatórios whitelabel com logo da sua agência",
-    "Múltiplos clientes/projetos",
-    "Onboarding dedicado",
-  ],
+  agencia: ["Tudo do Agência (Pro)", "Múltiplos clientes/projetos"],
 };
 
 export function LandingPricing({ plans }: { plans: PlanSummary[] }) {

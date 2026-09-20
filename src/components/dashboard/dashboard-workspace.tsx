@@ -6,19 +6,30 @@ import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { computeWinner, type ComparisonPriority } from "@/lib/executions/insights";
 import type { UsageSummary } from "@/lib/credits/usage-service";
+import { canUseCostProjection, getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
 import { getModelDefinition, type ModelId } from "@/types/models";
 import type { ExecutionDTO } from "@/types/execution";
 import { useUsageContext } from "./usage-context";
 import { CostProjection } from "./cost-projection";
 import { ExecutiveSummary } from "./executive-summary";
+import { LockedFeatureCard } from "./locked-feature-card";
 import { PremiumWarningDialog } from "./premium-warning-dialog";
 import { PromptEditorPanel } from "./prompt-editor-panel";
 import { ResultsGrid } from "./results-grid";
 
 const SKIP_PREMIUM_WARNING_KEY = "optiprompt:skip-premium-warning";
 
-export function DashboardWorkspace({ mostUsedModelIds }: { mostUsedModelIds: ModelId[] }) {
+export function DashboardWorkspace({
+  mostUsedModelIds,
+  planSlug,
+}: {
+  mostUsedModelIds: ModelId[];
+  planSlug: string | null;
+}) {
   const { applyUsage } = useUsageContext();
+  const allowedModelIds = getAllowedModelIds(planSlug);
+  const maxSelectableModels = getMaxSimultaneousModels(planSlug);
+  const hasCostProjection = canUseCostProjection(planSlug);
 
   const [promptName, setPromptName] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -113,6 +124,8 @@ export function DashboardWorkspace({ mostUsedModelIds }: { mostUsedModelIds: Mod
         selectedModelIds={selectedModelIds}
         onSelectedModelIdsChange={setSelectedModelIds}
         mostUsedModelIds={mostUsedModelIds}
+        allowedModelIds={allowedModelIds}
+        maxSelectableModels={maxSelectableModels}
         onSubmit={handleSubmit}
         isRunning={isRunning}
       />
@@ -124,10 +137,8 @@ export function DashboardWorkspace({ mostUsedModelIds }: { mostUsedModelIds: Mod
               priority={priority}
               onPriorityChange={setPriority}
             />
-            <CostProjection
-              results={execution.results}
-              priority={priority}
-              headerActions={
+            {(() => {
+              const exportReportButton = (
                 <a
                   href={`/report/${execution.id}`}
                   target="_blank"
@@ -137,8 +148,22 @@ export function DashboardWorkspace({ mostUsedModelIds }: { mostUsedModelIds: Mod
                   <FileOutput />
                   Exportar relatório PDF
                 </a>
-              }
-            />
+              );
+
+              return priority === "price" && !hasCostProjection ? (
+                <LockedFeatureCard
+                  title="Projeção de custo em escala"
+                  message="Disponível nos planos Agência (Pro) e Enterprise — projete o custo mensal de cada modelo no seu volume real de requisições."
+                  headerActions={exportReportButton}
+                />
+              ) : (
+                <CostProjection
+                  results={execution.results}
+                  priority={priority}
+                  headerActions={exportReportButton}
+                />
+              );
+            })()}
           </>
         )}
         <ResultsGrid

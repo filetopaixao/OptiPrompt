@@ -22,6 +22,8 @@ interface PromptEditorPanelProps {
   selectedModelIds: ModelId[];
   onSelectedModelIdsChange: (modelIds: ModelId[]) => void;
   mostUsedModelIds: ModelId[];
+  allowedModelIds: ModelId[];
+  maxSelectableModels: number;
   onSubmit: () => void;
   isRunning: boolean;
 }
@@ -47,6 +49,8 @@ export function PromptEditorPanel({
   selectedModelIds,
   onSelectedModelIdsChange,
   mostUsedModelIds,
+  allowedModelIds,
+  maxSelectableModels,
   onSubmit,
   isRunning,
 }: PromptEditorPanelProps) {
@@ -138,6 +142,8 @@ export function PromptEditorPanel({
                 selectedModelIds={selectedModelIds}
                 onChange={onSelectedModelIdsChange}
                 mostUsedModelIds={mostUsedModelIds}
+                allowedModelIds={allowedModelIds}
+                maxSelectable={maxSelectableModels}
                 disabled={isRunning}
               />
             </AccordionContent>
