@@ -77,6 +77,28 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 }
 
+/** Renovação mensal da assinatura: o Stripe cobra de novo e reajusta o
+ * período da subscription, mas isso nunca dispara checkout.session.completed
+ * de novo (esse evento só existe na primeira cobrança) — por isso o reset do
+ * consumo do ciclo precisa vir daqui, do invoice.paid com billing_reason
+ * "subscription_cycle" (renovação de fato, não a primeira fatura nem uma
+ * troca de plano no meio do ciclo). Créditos avulsos (bonusCredits) não são
+ * tocados — eles não vencem, então continuam somando ao teto do novo ciclo.
+ * Resetar pra 0 é naturalmente idempotente: reentrega do mesmo webhook não
+ * causa dano, ao contrário de somar créditos. */
+async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  if (invoice.billing_reason !== "subscription_cycle") return;
+
+  const customerId =
+    typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+  if (!customerId) return;
+
+  await prisma.user.updateMany({
+    where: { stripeCustomerId: customerId },
+    data: { creditsUsedThisCycle: 0, cycleStartedAt: new Date() },
+  });
+}
+
 async function handleSubscriptionChanged(subscription: Stripe.Subscription) {
   const customerId =
     typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
@@ -121,6 +143,9 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed":
       await handleCheckoutCompleted(event.data.object);
+      break;
+    case "invoice.paid":
+      await handleInvoicePaid(event.data.object);
       break;
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
