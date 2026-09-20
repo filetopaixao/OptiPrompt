@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://optiprompt.com.br";
+const BASE_URL = "https://otimizaia.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

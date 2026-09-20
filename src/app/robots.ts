@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       // login já bloquearia o crawler mesmo sem isso.
       disallow: ["/app", "/admin", "/api", "/report", "/trocar-senha"],
     },
-    sitemap: "https://optiprompt.com.br/sitemap.xml",
+    sitemap: "https://otimizaia.app/sitemap.xml",
   };
 }

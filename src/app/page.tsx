@@ -18,11 +18,11 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: "https://optiprompt.com.br" },
+  alternates: { canonical: "https://otimizaia.app" },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
-    url: "https://optiprompt.com.br",
+    url: "https://otimizaia.app",
     siteName: "OptiPrompt",
     locale: "pt_BR",
     type: "website",
@@ -41,7 +41,7 @@ const softwareAppJsonLd = {
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description: DESCRIPTION,
-  url: "https://optiprompt.com.br",
+  url: "https://otimizaia.app",
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "BRL",

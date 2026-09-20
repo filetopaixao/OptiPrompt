@@ -13,7 +13,7 @@ export const authConfig = {
   session: { strategy: "jwt" },
   // Obrigatório atrás de proxy reverso (Nginx -> Traefik -> Next.js em
   // produção) — sem isso o NextAuth rejeita toda requisição com
-  // "UntrustedHost", já que o Host chega como optiprompt.com.br/www e não
+  // "UntrustedHost", já que o Host chega como otimizaia.app/www e não
   // como o valor padrão esperado (localhost).
   trustHost: true,
   providers: [],
