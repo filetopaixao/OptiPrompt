@@ -21,6 +21,7 @@ export interface ModelPricing {
 export const MODEL_PRICING: Record<ModelId, ModelPricing> = {
   "openai/gpt-4o": { inputPricePer1k: 0.012825, outputPricePer1k: 0.0513 },
   "openai/gpt-4o-mini": { inputPricePer1k: 0.0007695, outputPricePer1k: 0.003078 },
+  "openai/gpt-5.4": { inputPricePer1k: 0.012825, outputPricePer1k: 0.07695 },
   "anthropic/claude-opus-5": { inputPricePer1k: 0.02565, outputPricePer1k: 0.12825 },
   "anthropic/claude-sonnet-5": { inputPricePer1k: 0.01026, outputPricePer1k: 0.0513 },
   "anthropic/claude-haiku-4.5": { inputPricePer1k: 0.00513, outputPricePer1k: 0.02565 },

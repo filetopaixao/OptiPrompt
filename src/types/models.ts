@@ -39,6 +39,9 @@ export interface ModelDefinition {
 export const MODEL_CATALOG: readonly ModelDefinition[] = [
   { id: "openai/gpt-4o", provider: "OPENAI", tier: "PREMIUM", label: "GPT-4o" },
   { id: "openai/gpt-4o-mini", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-4o mini" },
+  // reasoning.default_enabled=false (confirmado via GET /api/v1/models) —
+  // não precisa de disableReasoning como o DeepSeek V4 Pro.
+  { id: "openai/gpt-5.4", provider: "OPENAI", tier: "PREMIUM", label: "GPT-5.4" },
   { id: "anthropic/claude-opus-5", provider: "ANTHROPIC", tier: "PREMIUM", label: "Claude Opus 5" },
   { id: "anthropic/claude-sonnet-5", provider: "ANTHROPIC", tier: "PREMIUM", label: "Claude Sonnet 5" },
   {
