@@ -25,7 +25,11 @@ const PLAN_FEATURES: Record<string, string[]> = {
     "Projeção de custo em escala",
     "Comparação de versões (teste A/B de prompts)",
   ],
-  agencia: ["Tudo do Agência (Pro)", "Múltiplos clientes/projetos"],
+  agencia: [
+    "Tudo do Agência (Pro)",
+    "Múltiplos clientes/projetos",
+    "Relatórios whitelabel com logo da sua agência",
+  ],
 };
 
 export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
