@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,12 +11,24 @@ const SLIDES = [
   { id: "report", label: "Teste de prompt" },
 ] as const;
 
+const AUTO_ADVANCE_INTERVAL_MS = 5000;
+
 export function HeroSlider() {
   const [active, setActive] = useState(0);
 
   function goTo(index: number) {
     setActive((index + SLIDES.length) % SLIDES.length);
   }
+
+  // Reinicia a contagem sempre que o slide muda (manual ou automático), pra
+  // cada slide ficar visível pelo intervalo cheio em vez de cortar cedo
+  // quando o clique manual acontece perto do próximo avanço automático.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActive((current) => (current + 1) % SLIDES.length);
+    }, AUTO_ADVANCE_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [active]);
 
   return (
     <div className="flex flex-col gap-3">

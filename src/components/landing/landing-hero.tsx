@@ -29,7 +29,7 @@ export function LandingHero() {
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <a href="#planos" className={buttonVariants({ size: "lg" })}>
-              Fazer Raio-X de Custos Grátis
+              Quero Economizar 60% Agora
               <ArrowRight />
             </a>
             <DemoVideoDialog />
