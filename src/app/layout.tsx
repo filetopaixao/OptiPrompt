@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://optiprompt.com.br"),
   title: "OptiPrompt",
   description: "Teste, compare custos e versione prompts em múltiplos modelos de IA.",
+  verification: { google: "W1lf-27wYAdDwN7BpLt7aGtqJPrh0n2PqfMdcjdQH_k" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
