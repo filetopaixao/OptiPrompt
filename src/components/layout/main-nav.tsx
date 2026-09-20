@@ -4,17 +4,20 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { href: "/app", label: "Dashboard" },
   { href: "/app/history", label: "Histórico" },
 ] as const;
 
-export function MainNav() {
+const CLIENTS_NAV_ITEM = { href: "/app/clients", label: "Clientes" } as const;
+
+export function MainNav({ showClients = false }: { showClients?: boolean }) {
   const pathname = usePathname();
+  const navItems = showClients ? [...BASE_NAV_ITEMS, CLIENTS_NAV_ITEM] : BASE_NAV_ITEMS;
 
   return (
     <nav className="flex items-center gap-1">
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link

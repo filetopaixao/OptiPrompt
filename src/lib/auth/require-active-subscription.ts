@@ -7,6 +7,11 @@ export interface ActiveSubscriptionUser {
   name: string | null;
   planName: string | null;
   planSlug: string | null;
+  /** true quando esta conta é um cliente gerido por uma agência Enterprise
+   * (ver User.managedByUserId) — plano/assinatura acima já vêm do dono,
+   * não desta conta. Usado pra esconder telas de billing/gestão de clientes
+   * que só fazem sentido pra quem realmente paga a assinatura. */
+  isManagedAccount: boolean;
 }
 
 /**
@@ -27,26 +32,38 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
     select: {
       email: true,
       name: true,
-      subscriptionStatus: true,
       mustChangePassword: true,
+      managedByUserId: true,
+      subscriptionStatus: true,
       plan: { select: { name: true, slug: true } },
     },
   });
 
-  // Senha provisória (conta criada pelo admin) — troca obrigatória antes de
-  // qualquer outra coisa, inclusive antes de checar assinatura.
+  // Senha provisória (conta criada pelo admin ou por uma agência Enterprise
+  // pra um cliente) — troca obrigatória antes de qualquer outra coisa,
+  // inclusive antes de checar assinatura.
   if (user.mustChangePassword) {
     redirect("/trocar-senha");
   }
 
-  if (user.subscriptionStatus !== "ACTIVE") {
+  // Conta de cliente gerida (ver User.managedByUserId): não tem assinatura
+  // própria, tudo isso vem de quem gere ela.
+  const billingOwner = user.managedByUserId
+    ? await prisma.user.findUniqueOrThrow({
+        where: { id: user.managedByUserId },
+        select: { subscriptionStatus: true, plan: { select: { name: true, slug: true } } },
+      })
+    : user;
+
+  if (billingOwner.subscriptionStatus !== "ACTIVE") {
     redirect("/?assinatura=necessaria");
   }
 
   return {
     email: user.email,
     name: user.name,
-    planName: user.plan?.name ?? null,
-    planSlug: user.plan?.slug ?? null,
+    planName: billingOwner.plan?.name ?? null,
+    planSlug: billingOwner.plan?.slug ?? null,
+    isManagedAccount: user.managedByUserId !== null,
   };
 }

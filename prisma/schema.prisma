@@ -121,6 +121,14 @@ model User {
   openRouterKeyHash String? @unique
   openRouterApiKey  String? @unique
 
+  /// Contas de cliente geridas por uma agência no plano Enterprise (ver
+  /// src/app/app/clients) — quando setado, plano/assinatura/créditos dessa
+  /// conta resolvem pro dono (ver getBillingOwnerId), não pra ela mesma. Uma
+  /// conta gerida não pode por sua vez gerir outras (hierarquia de 1 nível).
+  managedByUserId String?
+  managedBy       User?   @relation("ManagedUsers", fields: [managedByUserId], references: [id], onDelete: SetNull)
+  managedUsers    User[]  @relation("ManagedUsers")
+
   prompts                   Prompt[]
   executions                Execution[]
   providerCreditAllocations ProviderCreditAllocation[]

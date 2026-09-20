@@ -25,10 +25,12 @@ export function UserMenu({
   email,
   name,
   planName,
+  isManagedAccount = false,
 }: {
   email: string;
   name: string | null;
   planName: string | null;
+  isManagedAccount?: boolean;
 }) {
   return (
     <DropdownMenu>
@@ -49,11 +51,15 @@ export function UserMenu({
             )}
           </DropdownMenuLabel>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem render={<a href="/app/billing" className="cursor-pointer" />}>
-          <ArrowUpCircle />
-          Upgrade
-        </DropdownMenuItem>
+        {!isManagedAccount && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<a href="/app/billing" className="cursor-pointer" />}>
+              <ArrowUpCircle />
+              Upgrade
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

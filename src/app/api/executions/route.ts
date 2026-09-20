@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getBillingOwnerId } from "@/lib/auth/billing-owner";
 import { getCurrentUserId } from "@/lib/auth/current-user";
 import { getUsageSummary, registerConsumption } from "@/lib/credits/usage-service";
 import { prisma } from "@/lib/db/prisma";
@@ -78,10 +79,16 @@ export async function POST(request: Request) {
 
   const { promptId, promptName, systemPrompt, userMessage, modelIds, rule } = parsed.data;
 
+  // Contas de cliente geridas por uma agência Enterprise (ver
+  // User.managedByUserId) não têm plano/créditos/chave OpenRouter próprios —
+  // tudo isso resolve pro dono. Prompt/execução continuam do userId real
+  // (quem efetivamente rodou), só o lado financeiro muda de dono.
+  const billingOwnerId = await getBillingOwnerId(userId);
+
   // Trava por baixo do que a UI já restringe (ModelSelector) — nunca confiar
   // só no que o cliente manda, alguém pode chamar a API direto.
   const { plan } = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
+    where: { id: billingOwnerId },
     select: { plan: { select: { slug: true } } },
   });
   const allowedModelIds = getAllowedModelIds(plan?.slug ?? null);
@@ -100,7 +107,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const usage = await getUsageSummary(userId);
+  const usage = await getUsageSummary(billingOwnerId);
   if (usage.isOverLimit) {
     return NextResponse.json(
       { error: "Sua cota mensal de uso foi atingida. Faça upgrade do plano para continuar." },
@@ -124,7 +131,7 @@ export async function POST(request: Request) {
         data: { userId, name: promptName?.trim() || "Prompt sem título" },
       });
 
-  const apiKey = await ensureOpenRouterApiKey(userId);
+  const apiKey = await ensureOpenRouterApiKey(billingOwnerId);
 
   const rawResults = await runComparison({
     systemPrompt,
@@ -166,7 +173,7 @@ export async function POST(request: Request) {
 
   const totalCreditsConsumed =
     results.reduce((sum, result) => sum + result.estimatedCostInCredits, 0) + ruleCheckCreditsConsumed;
-  const updatedUsage = await registerConsumption(userId, totalCreditsConsumed);
+  const updatedUsage = await registerConsumption(billingOwnerId, totalCreditsConsumed);
 
   return NextResponse.json(
     { execution: toExecutionDTO(execution), usage: updatedUsage },

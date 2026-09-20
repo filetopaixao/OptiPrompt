@@ -29,8 +29,17 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { subscriptionStatus: true, cancelAtPeriodEnd: true },
+    select: { subscriptionStatus: true, cancelAtPeriodEnd: true, managedByUserId: true },
   });
+  // Conta de cliente gerida por uma agência (ver User.managedByUserId) não
+  // tem assinatura própria — créditos avulsos são comprados pela agência,
+  // não por quem só tem acesso à plataforma.
+  if (user.managedByUserId) {
+    return NextResponse.json(
+      { error: "Sua conta é gerida por uma agência — fale com o administrador dela para comprar créditos." },
+      { status: 403 },
+    );
+  }
   if (user.subscriptionStatus !== "ACTIVE" || user.cancelAtPeriodEnd) {
     return NextResponse.json(
       { error: "Sua assinatura está cancelada ou com cancelamento agendado — não é possível comprar créditos avulsos." },
