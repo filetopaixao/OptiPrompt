@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileOutput } from "lucide-react";
 import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
-import type { ComparisonPriority } from "@/lib/executions/insights";
+import { computeWinner, type ComparisonPriority } from "@/lib/executions/insights";
 import type { UsageSummary } from "@/lib/credits/usage-service";
 import { getModelDefinition, type ModelId } from "@/types/models";
 import type { ExecutionDTO } from "@/types/execution";
@@ -124,23 +124,29 @@ export function DashboardWorkspace({ mostUsedModelIds }: { mostUsedModelIds: Mod
               priority={priority}
               onPriorityChange={setPriority}
             />
-            <div className="flex justify-end">
-              <a
-                href={`/report/${execution.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonVariants({ variant: "outline" })}
-              >
-                <FileOutput />
-                Exportar relatório PDF
-              </a>
-            </div>
-            <CostProjection results={execution.results} priority={priority} />
+            <CostProjection
+              results={execution.results}
+              priority={priority}
+              headerActions={
+                <a
+                  href={`/report/${execution.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  <FileOutput />
+                  Exportar relatório PDF
+                </a>
+              }
+            />
           </>
         )}
         <ResultsGrid
           results={isRunning ? [] : execution?.results ?? []}
           pendingModelIds={isRunning ? selectedModelIds : []}
+          winnerId={
+            !isRunning && execution ? computeWinner(execution.results, priority)?.winner.id : undefined
+          }
         />
       </div>
 

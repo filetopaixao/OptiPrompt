@@ -30,6 +30,11 @@ interface PromptEditorPanelProps {
 // óbvio que a seção é clicável/recolhível.
 const TRIGGER_ICON_CLASS = "**:data-[slot=accordion-trigger-icon]:size-6";
 
+// Borda um pouco mais escura que o padrão (border-input) e foco mais óbvio
+// que o padrão do design system — só nos campos desta coluna, sem alterar
+// os componentes Input/Textarea globais usados no resto do app.
+const FIELD_CLASS = "border-foreground/20 focus-visible:ring-3 focus-visible:ring-primary/40";
+
 export function PromptEditorPanel({
   promptName,
   onPromptNameChange,
@@ -61,12 +66,13 @@ export function PromptEditorPanel({
               Teste de prompt
             </AccordionTrigger>
             <AccordionContent>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="prompt-name">Nome do prompt</Label>
                   <Input
                     id="prompt-name"
                     placeholder="Ex.: Atendimento — resumo de ticket"
+                    className={FIELD_CLASS}
                     value={promptName}
                     onChange={(event) => onPromptNameChange(event.target.value)}
                     disabled={isRunning}
@@ -78,7 +84,7 @@ export function PromptEditorPanel({
                   <Textarea
                     id="system-prompt"
                     placeholder="Você é um assistente especializado em..."
-                    className="min-h-28 resize-y"
+                    className={`min-h-28 resize-y ${FIELD_CLASS}`}
                     value={systemPrompt}
                     onChange={(event) => onSystemPromptChange(event.target.value)}
                     disabled={isRunning}
@@ -90,7 +96,7 @@ export function PromptEditorPanel({
                   <Textarea
                     id="user-message"
                     placeholder="Mensagem de teste enviada ao modelo..."
-                    className="min-h-28 resize-y"
+                    className={`min-h-28 resize-y ${FIELD_CLASS}`}
                     value={userMessage}
                     onChange={(event) => onUserMessageChange(event.target.value)}
                     disabled={isRunning}
@@ -102,7 +108,7 @@ export function PromptEditorPanel({
                   <Textarea
                     id="rule"
                     placeholder='Ex.: A resposta não pode dizer que é uma IA.'
-                    className="min-h-16 resize-y"
+                    className={`min-h-16 resize-y ${FIELD_CLASS}`}
                     value={rule}
                     onChange={(event) => onRuleChange(event.target.value)}
                     disabled={isRunning}
@@ -139,10 +145,18 @@ export function PromptEditorPanel({
         </div>
       </Accordion>
 
-      <Button onClick={onSubmit} disabled={!canSubmit} className="w-full">
-        {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
-        {isRunning ? "Executando…" : "Executar comparação"}
-      </Button>
+      {/* mt-auto empurra pro fim da coluna quando ela é esticada pelo grid
+       * (lado a lado com os resultados, em telas lg+) — sticky então mantém
+       * o botão sempre visível enquanto o usuário rola, sem precisar caçar
+       * o CTA depois de abrir a seção de Modelos. Em telas menores (colunas
+       * empilhadas), sticky não tem espaço extra pra "flutuar" e o botão
+       * simplesmente aparece logo após o accordion, como antes. */}
+      <div className="sticky bottom-4 z-10 mt-auto rounded-xl border bg-card p-3 shadow-md ring-1 ring-foreground/10">
+        <Button onClick={onSubmit} disabled={!canSubmit} className="w-full">
+          {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
+          {isRunning ? "Executando…" : "Executar comparação"}
+        </Button>
+      </div>
     </div>
   );
 }

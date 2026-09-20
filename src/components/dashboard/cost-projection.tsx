@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
+import { useMemo, useState, type ReactNode } from "react";
+import { Bar, BarChart, CartesianGrid, Cell, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,12 @@ import { getModelDefinition } from "@/types/models";
 import type { ExecutionResultDTO } from "@/types/execution";
 
 const DEFAULT_REQUESTS_PER_MONTH = 10_000;
+
+/** Cor de destaque do vencedor (menor custo/latência) vs. o resto das barras
+ * — hardcoded em vez de token de tema porque o preenchimento SVG do
+ * recharts não lê variáveis de cor por Cell de forma confiável entre temas. */
+const WINNER_BAR_COLOR = "#10b981"; // emerald-500
+const OTHER_BAR_COLOR = "#cbd5e1"; // slate-300
 
 const costChartConfig = {
   monthlyCostBRL: { label: "Custo mensal projetado", color: "var(--chart-1)" },
@@ -35,9 +41,14 @@ const latencyChartConfig = {
 export function CostProjection({
   results,
   priority = "price",
+  headerActions,
 }: {
   results: ExecutionResultDTO[];
   priority?: ComparisonPriority;
+  /** Ações extras (ex: botão de exportar relatório) renderizadas no mesmo
+   * nível do título do card, alinhadas à direita — evita que fiquem
+   * "soltas" no layout entre os componentes. */
+  headerActions?: ReactNode;
 }) {
   const [requestsPerMonth, setRequestsPerMonth] = useState(DEFAULT_REQUESTS_PER_MONTH);
 
@@ -59,8 +70,9 @@ export function CostProjection({
 
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle>Comparação de latência</CardTitle>
+          {headerActions && <div className="print:hidden">{headerActions}</div>}
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {speedInsight && (
@@ -79,7 +91,14 @@ export function CostProjection({
               <XAxis type="number" tickFormatter={(value) => `${value}ms`} fontSize={12} />
               <YAxis type="category" dataKey="modelId" width={110} fontSize={12} />
               <Tooltip content={<ChartTooltipContent formatter={(value) => `${value}ms`} />} />
-              <Bar dataKey="latencyMs" fill="var(--color-latencyMs)" radius={4} />
+              <Bar dataKey="latencyMs" radius={4}>
+                {latencyRows.map((row) => (
+                  <Cell
+                    key={row.modelId}
+                    fill={row.modelId === fastest.modelId ? WINNER_BAR_COLOR : OTHER_BAR_COLOR}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ChartContainer>
 
@@ -124,19 +143,22 @@ export function CostProjection({
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>Projeção de custo em escala</CardTitle>
-        <div className="flex items-center gap-2 print:hidden">
-          <Label htmlFor="requests-per-month" className="text-xs text-muted-foreground">
-            Requisições/mês
-          </Label>
-          <Input
-            id="requests-per-month"
-            type="number"
-            min={1}
-            step={1000}
-            value={requestsPerMonth}
-            onChange={(event) => setRequestsPerMonth(Math.max(1, Number(event.target.value) || 1))}
-            className="w-28"
-          />
+        <div className="flex items-center gap-3 print:hidden">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="requests-per-month" className="text-xs text-muted-foreground">
+              Requisições/mês
+            </Label>
+            <Input
+              id="requests-per-month"
+              type="number"
+              min={1}
+              step={1000}
+              value={requestsPerMonth}
+              onChange={(event) => setRequestsPerMonth(Math.max(1, Number(event.target.value) || 1))}
+              className="w-28"
+            />
+          </div>
+          {headerActions}
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -157,7 +179,14 @@ export function CostProjection({
             <Tooltip
               content={<ChartTooltipContent formatter={(value) => formatBRL(Number(value))} />}
             />
-            <Bar dataKey="monthlyCostBRL" fill="var(--color-monthlyCostBRL)" radius={4} />
+            <Bar dataKey="monthlyCostBRL" radius={4}>
+              {costRows.map((row) => (
+                <Cell
+                  key={row.modelId}
+                  fill={row.modelId === cheapest.modelId ? WINNER_BAR_COLOR : OTHER_BAR_COLOR}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ChartContainer>
 

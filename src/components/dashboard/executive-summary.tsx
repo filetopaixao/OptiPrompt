@@ -37,9 +37,9 @@ export function ExecutiveSummary({
       : `${winnerLabel} custou ${percentGain}% menos do que ${runnerUpLabel} neste teste.`;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-lg border border-emerald-500/30 bg-emerald-50/30 p-4 ring-1 ring-emerald-500/50 sm:flex-row sm:items-center sm:justify-between dark:bg-emerald-500/10">
       <div className="flex items-start gap-3">
-        <Trophy className="mt-0.5 size-6 shrink-0 text-primary" />
+        <Trophy className="mt-0.5 size-6 shrink-0 text-emerald-600 dark:text-emerald-400" />
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Modelo vencedor

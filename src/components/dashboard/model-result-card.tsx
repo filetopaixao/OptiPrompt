@@ -26,9 +26,24 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   MISTRAL: "Mistral",
 };
 
-export function ModelResultCard({ result }: { result: ExecutionResultDTO }) {
+export function ModelResultCard({
+  result,
+  isWinner = false,
+}: {
+  result: ExecutionResultDTO;
+  /** Modelo vencedor da comparação (menor custo ou menor latência, conforme
+   * o critério ativo) — ganha destaque visual pra guiar o olho direto pra
+   * decisão em vez de obrigar o cliente a comparar card por card. */
+  isWinner?: boolean;
+}) {
   return (
-    <Card className="flex h-full flex-col gap-3 py-4">
+    <Card
+      className={
+        isWinner
+          ? "flex h-full flex-col gap-3 border-emerald-500/40 bg-emerald-50/30 py-4 ring-1 ring-emerald-500/50 dark:bg-emerald-500/5"
+          : "flex h-full flex-col gap-3 py-4"
+      }
+    >
       <CardHeader className="flex flex-col gap-2 px-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 font-medium">

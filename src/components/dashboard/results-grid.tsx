@@ -7,9 +7,10 @@ import { ModelResultCard } from "./model-result-card";
 interface ResultsGridProps {
   results: ExecutionResultDTO[];
   pendingModelIds: ModelId[];
+  winnerId?: string;
 }
 
-export function ResultsGrid({ results, pendingModelIds }: ResultsGridProps) {
+export function ResultsGrid({ results, pendingModelIds, winnerId }: ResultsGridProps) {
   if (results.length === 0 && pendingModelIds.length === 0) {
     return (
       <div className="flex h-full min-h-[24rem] flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-center text-muted-foreground">
@@ -24,7 +25,7 @@ export function ResultsGrid({ results, pendingModelIds }: ResultsGridProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {results.map((result) => (
-        <ModelResultCard key={result.id} result={result} />
+        <ModelResultCard key={result.id} result={result} isWinner={result.id === winnerId} />
       ))}
       {pendingModelIds.map((modelId) => (
         <div key={modelId} className="flex flex-col gap-3 rounded-lg border p-4">
