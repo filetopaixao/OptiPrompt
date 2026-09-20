@@ -27,7 +27,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
   ],
   agencia: [
     "Tudo do Agência (Pro)",
-    "Múltiplos clientes/projetos",
+    "Múltiplos clientes com login e histórico próprios, sob a mesma assinatura",
     "Relatórios whitelabel com logo da sua agência",
   ],
 };

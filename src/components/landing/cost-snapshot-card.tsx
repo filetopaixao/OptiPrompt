@@ -5,11 +5,17 @@ interface MetricRowProps {
   label: string;
   value: string;
   icon?: ReactNode;
-  tone: "warning" | "positive";
+  tone: "warning" | "positive" | "balanced";
 }
 
+const TONE_COLORS: Record<MetricRowProps["tone"], string> = {
+  warning: "text-rose-300",
+  positive: "text-emerald-300",
+  balanced: "text-sky-300",
+};
+
 function MetricRow({ label, value, icon, tone }: MetricRowProps) {
-  const valueColor = tone === "warning" ? "text-rose-300" : "text-emerald-300";
+  const valueColor = TONE_COLORS[tone];
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       <dt className="flex items-center gap-1.5 text-muted-foreground">
@@ -62,6 +68,22 @@ export function CostSnapshotCard() {
               icon={<Timer className="size-3.5" />}
               label="Latência média"
               value="850ms"
+            />
+          </dl>
+        </div>
+
+        <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-4">
+          <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-sky-400">
+            <Receipt className="size-3.5" />
+            deepseek-v3.2 · DeepSeek
+          </p>
+          <dl className="flex flex-col gap-2">
+            <MetricRow tone="balanced" label="Custo por chamada" value="R$ 0,03" />
+            <MetricRow
+              tone="balanced"
+              icon={<Timer className="size-3.5" />}
+              label="Latência média"
+              value="610ms"
             />
           </dl>
         </div>
