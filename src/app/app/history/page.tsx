@@ -26,6 +26,7 @@ export default async function HistoryPage() {
         executions={executions}
         canCompareVersions={canUseVersionCompare(billingOwner.plan?.slug)}
         showingTeamHistory={isTeamOwner}
+        currentUserId={userId}
       />
     </div>
   );

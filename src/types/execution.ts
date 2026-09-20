@@ -45,5 +45,5 @@ export interface ExecutionDTO {
   /** Quem rodou essa execução — só populado na visão agregada de equipe do
    * dono Enterprise (ver listExecutionsForTeam). Ausente na listagem pessoal
    * normal, onde já é implícito que é sempre o próprio usuário logado. */
-  executedBy?: { name: string | null; email: string };
+  executedBy?: { id: string; name: string | null; email: string };
 }

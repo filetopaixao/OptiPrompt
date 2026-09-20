@@ -25,7 +25,7 @@ export async function listExecutionsForTeam(ownerId: string): Promise<ExecutionD
     include: {
       prompt: { select: { name: true } },
       results: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { id: true, name: true, email: true } },
     },
   });
 

@@ -6,7 +6,7 @@ type ExecutionWithRelations = Execution & {
   results: ExecutionResult[];
   /** Só incluído na consulta de listExecutionsForTeam — ver comentário em
    * ExecutionDTO.executedBy. */
-  user?: Pick<User, "name" | "email">;
+  user?: Pick<User, "id" | "name" | "email">;
 };
 
 /** Mapeia as entidades do Prisma para o DTO exposto pela API. */
@@ -20,7 +20,7 @@ export function toExecutionDTO(execution: ExecutionWithRelations): ExecutionDTO 
     userMessage: execution.userMessage,
     rule: execution.rule,
     executedBy: execution.user
-      ? { name: execution.user.name, email: execution.user.email }
+      ? { id: execution.user.id, name: execution.user.name, email: execution.user.email }
       : undefined,
     results: execution.results.map((result) => ({
       id: result.id,

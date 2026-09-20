@@ -16,6 +16,9 @@ interface ExecutionRowProps {
   /** false quando o plano não inclui "Comparação de versões" — some o
    * checkbox de seleção, a linha vira só uma entrada de consulta. */
   selectable: boolean;
+  /** Usado só na visão de equipe do dono Enterprise, pra destacar como
+   * "Você" a execução que ele mesmo rodou, em vez do próprio nome. */
+  currentUserId?: string;
 }
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -23,9 +26,16 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
-export function ExecutionRow({ execution, isSelected, onToggle, selectable }: ExecutionRowProps) {
+export function ExecutionRow({
+  execution,
+  isSelected,
+  onToggle,
+  selectable,
+  currentUserId,
+}: ExecutionRowProps) {
   const metrics = aggregateExecutionMetrics(execution);
   const inputId = `execution-${execution.id}`;
+  const isOwnExecution = execution.executedBy?.id === currentUserId;
 
   return (
     <div
@@ -48,9 +58,12 @@ export function ExecutionRow({ execution, isSelected, onToggle, selectable }: Ex
             {dateFormatter.format(new Date(execution.createdAt))}
           </span>
           {execution.executedBy && (
-            <Badge variant="outline" className="gap-1 text-xs font-normal">
+            <Badge
+              variant={isOwnExecution ? "default" : "outline"}
+              className="gap-1 text-xs font-normal"
+            >
               <User className="size-3" />
-              {execution.executedBy.name || execution.executedBy.email}
+              {isOwnExecution ? "Você" : execution.executedBy.name || execution.executedBy.email}
             </Badge>
           )}
           {metrics.ruleSummary && (

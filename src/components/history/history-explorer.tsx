@@ -12,12 +12,16 @@ export function HistoryExplorer({
   executions,
   canCompareVersions,
   showingTeamHistory = false,
+  currentUserId,
 }: {
   executions: ExecutionDTO[];
   canCompareVersions: boolean;
   /** true quando é a visão agregada do dono Enterprise (ver
    * listExecutionsForTeam) — inclui execuções da carteira de clientes. */
   showingTeamHistory?: boolean;
+  /** Usado só pra destacar "Você" no badge de quem executou, na visão de
+   * equipe (ver ExecutionRow). */
+  currentUserId?: string;
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
@@ -94,6 +98,7 @@ export function HistoryExplorer({
             isSelected={selectedIds.includes(execution.id)}
             onToggle={() => toggleSelection(execution.id)}
             selectable={canCompareVersions}
+            currentUserId={currentUserId}
           />
         ))}
       </div>
