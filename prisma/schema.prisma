@@ -107,6 +107,13 @@ model User {
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
 
+  /// Cancelamento agendado pro fim do ciclo pago atual (ver
+  /// src/app/api/stripe/cancel-subscription/route.ts) — enquanto true, o
+  /// usuário mantém acesso e os créditos do plano até currentPeriodEnd, mas
+  /// não pode comprar pacotes avulsos (ver checkout-credits/route.ts).
+  cancelAtPeriodEnd Boolean   @default(false)
+  currentPeriodEnd  DateTime?
+
   /// Chave OpenRouter provisionada automaticamente pra esta conta (ver
   /// src/lib/openrouter/client.ts) — todas as execuções desse usuário usam
   /// essa chave, com teto de gasto (`limit`) espelhando creditsTotal como

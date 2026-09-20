@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth/current-user";
+import { prisma } from "@/lib/db/prisma";
 import { getCreditPackPriceId } from "@/lib/credits/credit-pack";
 import { getOrCreateStripeCustomerId, getStripeClient } from "@/lib/stripe/client";
 
@@ -25,6 +26,18 @@ export async function POST(request: Request) {
   }
 
   const userId = await getCurrentUserId();
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { subscriptionStatus: true, cancelAtPeriodEnd: true },
+  });
+  if (user.subscriptionStatus !== "ACTIVE" || user.cancelAtPeriodEnd) {
+    return NextResponse.json(
+      { error: "Sua assinatura está cancelada ou com cancelamento agendado — não é possível comprar créditos avulsos." },
+      { status: 403 },
+    );
+  }
+
   const customerId = await getOrCreateStripeCustomerId(userId);
 
   const origin = request.headers.get("origin") ?? new URL(request.url).origin;

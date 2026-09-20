@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db/prisma";
-import { getStripeClient, mapStripeSubscriptionStatus } from "@/lib/stripe/client";
+import { getStripeClient, getSubscriptionPeriodEnd, mapStripeSubscriptionStatus } from "@/lib/stripe/client";
 import { CREDIT_PACK_AMOUNT } from "@/lib/credits/credit-pack";
 import { syncOpenRouterLimit } from "@/lib/openrouter/client";
 
@@ -47,6 +47,13 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
   const subscriptionId =
     typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
 
+  // Busca a assinatura completa pra sincronizar o fim do ciclo pago e limpar
+  // um cancelamento agendado de uma assinatura anterior (ex: usuário
+  // cancelou, o acesso seguiu até o fim do ciclo, e depois assinou de novo).
+  const subscription = subscriptionId
+    ? await getStripeClient().subscriptions.retrieve(subscriptionId)
+    : null;
+
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -54,6 +61,8 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
       ...(customerId ? { stripeCustomerId: customerId } : {}),
       ...(subscriptionId ? { stripeSubscriptionId: subscriptionId } : {}),
       subscriptionStatus: "ACTIVE",
+      cancelAtPeriodEnd: subscription?.cancel_at_period_end ?? false,
+      currentPeriodEnd: subscription ? getSubscriptionPeriodEnd(subscription) : null,
     },
   });
 
@@ -77,6 +86,11 @@ async function handleSubscriptionChanged(subscription: Stripe.Subscription) {
     data: {
       subscriptionStatus: mapStripeSubscriptionStatus(subscription.status),
       stripeSubscriptionId: subscription.id,
+      // Cobre tanto quem cancelou pelo nosso botão quanto quem cancelou (ou
+      // reverteu) direto pelo portal do Stripe — o webhook é a fonte da
+      // verdade, o botão só dispara a chamada que gera este evento.
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodEnd: getSubscriptionPeriodEnd(subscription),
     },
   });
 }

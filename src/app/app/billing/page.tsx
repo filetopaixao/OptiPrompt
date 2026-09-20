@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import { CreditPackButton } from "@/components/dashboard/credit-pack-button";
+import { CancelSubscriptionButton } from "@/components/dashboard/cancel-subscription-button";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,18 @@ export default async function BillingPage() {
   const [user, plans] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { bonusCredits: true, plan: { select: { slug: true } } },
+      select: {
+        bonusCredits: true,
+        subscriptionStatus: true,
+        cancelAtPeriodEnd: true,
+        currentPeriodEnd: true,
+        plan: { select: { slug: true } },
+      },
     }),
     listPlans(),
   ]);
+
+  const canBuyCredits = user.subscriptionStatus === "ACTIVE" && !user.cancelAtPeriodEnd;
 
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-6">
@@ -27,6 +36,19 @@ export default async function BillingPage() {
       <p className="mt-1 text-muted-foreground">
         Escolha o plano da sua agência — os créditos são renovados a cada ciclo de faturamento.
       </p>
+
+      {user.cancelAtPeriodEnd && (
+        <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+          Sua assinatura está com cancelamento agendado para{" "}
+          <strong>
+            {user.currentPeriodEnd
+              ? user.currentPeriodEnd.toLocaleDateString("pt-BR")
+              : "o fim do ciclo atual"}
+          </strong>
+          . Até lá você mantém acesso total e os créditos do seu plano, mas não é possível comprar
+          pacotes avulsos.
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {plans.map((plan) => {
@@ -78,10 +100,23 @@ export default async function BillingPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <CreditPackButton />
+            <CreditPackButton disabled={!canBuyCredits} />
           </CardContent>
         </Card>
       </div>
+
+      {user.subscriptionStatus === "ACTIVE" && !user.cancelAtPeriodEnd && (
+        <div className="mt-10">
+          <h2 className="text-lg font-semibold">Cancelar assinatura</h2>
+          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+            Você mantém acesso total e os créditos do seu plano até o fim do ciclo já pago — o
+            cancelamento não é imediato.
+          </p>
+          <div className="mt-4">
+            <CancelSubscriptionButton currentPeriodEnd={user.currentPeriodEnd?.toISOString() ?? null} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

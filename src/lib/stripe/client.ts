@@ -46,6 +46,15 @@ export function getStripePriceId(planSlug: string): string {
   return priceId;
 }
 
+/** A partir da versão da API usada por esse SDK, `current_period_end` saiu do
+ * nível do Subscription e passou pro item da assinatura (confirmado no
+ * .d.ts instalado — Subscriptions.d.ts não tem mais o campo, só
+ * SubscriptionItems.d.ts). */
+export function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): Date | null {
+  const periodEndUnix = subscription.items.data[0]?.current_period_end;
+  return periodEndUnix ? new Date(periodEndUnix * 1000) : null;
+}
+
 /** Espelha Stripe.Subscription.Status para o nosso enum interno. */
 export function mapStripeSubscriptionStatus(
   status: Stripe.Subscription.Status,

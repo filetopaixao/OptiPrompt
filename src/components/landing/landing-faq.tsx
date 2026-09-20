@@ -28,7 +28,7 @@ function buildModelsAnswer(): string {
     return `${PROVIDER_LABELS[provider]} (${labels.join(", ")})`;
   }).filter((group): group is string => group !== null);
 
-  return `Hoje comparamos ${groups.join("; ")}. A lista cresce conforme novos modelos chegam no OpenRouter, sem precisar trocar de plataforma.`;
+  return `Hoje comparamos ${groups.join("; ")}.`;
 }
 
 const FAQ_ITEMS = [
@@ -59,7 +59,7 @@ const FAQ_ITEMS = [
   {
     question: "O que acontece se eu ultrapassar os créditos do plano?",
     answer:
-      "A execução de novos testes é pausada para garantir que você nunca tenha cobranças surpresas no seu cartão. Caso precise de mais capacidade antes da sua renovação mensal, você pode adquirir pacotes de recarga avulsa com um clique (ex: +9.700 créditos por R$ 39,00). O saldo avulso é liberado instantaneamente e não altera o valor da sua assinatura recorrente.",
+      "A execução de novos testes é pausada para garantir que você nunca tenha cobranças surpresas no seu cartão. Caso precise de mais capacidade antes da sua renovação mensal, você pode adquirir pacotes de recarga avulsa com um clique (ex: +10.000 créditos por R$ 39,00). O saldo avulso é liberado instantaneamente e não altera o valor da sua assinatura recorrente.",
   },
   {
     question: "Posso cancelar quando quiser?",
