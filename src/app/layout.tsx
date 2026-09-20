@@ -38,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Toaster />
           </TooltipProvider>
         </AuthSessionProvider>
-        <GoogleAnalytics gaId="G-H2WFVVKXFN" />
+        <GoogleAnalytics gaId="G-CHGLH0SQP5" />
       </body>
     </html>
   );
