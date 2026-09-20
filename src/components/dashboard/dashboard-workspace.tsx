@@ -191,14 +191,23 @@ export function DashboardWorkspace({
                 </a>
               );
 
-              return priority === "price" && !hasCostProjection ? (
+              // Mesma trava nos dois modos do toggle — antes só "price" ficava
+              // travado, então trocar pra "Velocidade" destravava o gráfico
+              // real sem querer (mesma seção, comportamento inconsistente).
+              return !hasCostProjection ? (
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-end print:hidden">{exportReportButton}</div>
                   <LockedFeatureCard
-                    featureName="Projeção de custo em escala"
-                    message="Disponível nos planos Agência (Pro) e Enterprise — projete o custo mensal de cada modelo no seu volume real de requisições."
+                    featureName={
+                      priority === "price" ? "Projeção de custo em escala" : "Comparação de velocidade"
+                    }
+                    message={
+                      priority === "price"
+                        ? "Disponível nos planos Agência (Pro) e Enterprise — projete o custo mensal de cada modelo no seu volume real de requisições."
+                        : "Disponível nos planos Agência (Pro) e Enterprise — compare a latência de cada modelo lado a lado."
+                    }
                     previewContent={
-                      <CostProjection results={SAMPLE_COST_PROJECTION_RESULTS} priority="price" />
+                      <CostProjection results={SAMPLE_COST_PROJECTION_RESULTS} priority={priority} />
                     }
                   />
                 </div>
