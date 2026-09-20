@@ -1,8 +1,10 @@
 "use client";
 
-import { Clock, FileOutput, Hash, Layers } from "lucide-react";
+import { CheckCircle2, Clock, FileOutput, Hash, Layers, Wallet, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { formatBRLPrecise } from "@/lib/format-currency";
 import { aggregateExecutionMetrics } from "@/lib/executions/metrics";
 import { cn } from "@/lib/utils";
 import type { ExecutionDTO } from "@/types/execution";
@@ -36,6 +38,19 @@ export function ExecutionRow({ execution, isSelected, onToggle }: ExecutionRowPr
           <span className="text-xs text-muted-foreground">
             {dateFormatter.format(new Date(execution.createdAt))}
           </span>
+          {metrics.ruleSummary && (
+            <Badge
+              variant={metrics.ruleSummary === "PASSED" ? "default" : "destructive"}
+              className="gap-1"
+            >
+              {metrics.ruleSummary === "PASSED" ? (
+                <CheckCircle2 className="size-3" />
+              ) : (
+                <XCircle className="size-3" />
+              )}
+              {metrics.ruleSummary === "PASSED" ? "Regra: passou" : "Regra: falhou"}
+            </Badge>
+          )}
         </div>
         <p className="line-clamp-1 text-xs text-muted-foreground">
           {execution.userMessage || "(sem user message)"}
@@ -53,6 +68,10 @@ export function ExecutionRow({ execution, isSelected, onToggle }: ExecutionRowPr
         <span className="flex items-center gap-1">
           <Hash className="size-3.5" />
           {metrics.totalTokens} tokens
+        </span>
+        <span className="flex items-center gap-1">
+          <Wallet className="size-3.5" />
+          {formatBRLPrecise(metrics.totalCostInBRL)}
         </span>
         <a
           href={`/report/${execution.id}`}

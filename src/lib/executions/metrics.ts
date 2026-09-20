@@ -5,8 +5,14 @@ export interface ExecutionMetrics {
   avgLatencyMs: number;
   totalTokens: number;
   totalCreditsConsumed: number;
+  totalCostInBRL: number;
   successCount: number;
   errorCount: number;
+  /** Resumo do veredito da regra entre todos os modelos da execução — null
+   * quando a execução não tinha regra definida. "FAILED" prevalece sobre
+   * "PASSED" (um modelo só reprovando já compromete a resposta como um
+   * todo pra quem está decidindo qual versão do prompt manter). */
+  ruleSummary: "PASSED" | "FAILED" | null;
 }
 
 export function aggregateExecutionMetrics(execution: ExecutionDTO): ExecutionMetrics {
@@ -22,13 +28,23 @@ export function aggregateExecutionMetrics(execution: ExecutionDTO): ExecutionMet
     (sum, result) => sum + result.estimatedCostInCredits,
     0,
   );
+  const totalCostInBRL = successResults.reduce((sum, result) => sum + result.estimatedCostInBRL, 0);
+
+  const verdicts = results.map((result) => result.ruleVerdict);
+  const ruleSummary = verdicts.includes("FAILED")
+    ? "FAILED"
+    : verdicts.includes("PASSED")
+      ? "PASSED"
+      : null;
 
   return {
     modelCount: results.length,
     avgLatencyMs: successResults.length > 0 ? Math.round(totalLatencyMs / successResults.length) : 0,
     totalTokens,
     totalCreditsConsumed,
+    totalCostInBRL,
     successCount: successResults.length,
     errorCount: results.length - successResults.length,
+    ruleSummary,
   };
 }
