@@ -31,7 +31,7 @@ export function ReportView({
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Image src="/logo-icon.png" alt="" width={16} height={16} />
-            OptiPrompt — Relatório de comparação
+            OtimizaIA — Relatório de comparação
           </div>
           <h1 className="mt-1 text-xl font-semibold">{execution.promptName}</h1>
           <p className="text-sm text-muted-foreground">
@@ -96,7 +96,7 @@ export function ReportView({
       </section>
 
       <footer className="mt-10 border-t pt-4 text-center text-xs text-muted-foreground">
-        Gerado por OptiPrompt — optiprompt.dev
+        Gerado por OtimizaIA — otimizaia.app
       </footer>
     </div>
   );

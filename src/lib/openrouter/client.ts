@@ -105,7 +105,7 @@ export async function syncOpenRouterLimit(userId: string): Promise<void> {
   }
 }
 
-/** Saldo real da conta mestre da OptiPrompt no OpenRouter — usado no
+/** Saldo real da conta mestre da OtimizaIA no OpenRouter — usado no
  * /admin/creditos pra lembrar de recarregar antes que os clientes sintam. */
 export async function getMasterAccountBalance(): Promise<{
   totalCreditsUSD: number;

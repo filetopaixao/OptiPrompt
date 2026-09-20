@@ -39,7 +39,7 @@ const FAQ_ITEMS = [
   {
     question: "Preciso ter minhas próprias chaves de API dos modelos?",
     answer:
-      "Não. O OptiPrompt já roda com chaves da plataforma — você só escolhe os modelos e usa os créditos do seu plano.",
+      "Não. O OtimizaIA já roda com chaves da plataforma — você só escolhe os modelos e usa os créditos do seu plano.",
   },
   {
     question: "Como o custo por requisição é calculado?",
@@ -47,14 +47,14 @@ const FAQ_ITEMS = [
       "Lemos os tokens de entrada e saída retornados por cada provedor e aplicamos a tabela de preços oficial de cada modelo, convertendo para créditos internos em tempo real.",
   },
   {
-    question: "O OptiPrompt é uma alternativa ao PromptFoo?",
+    question: "O OtimizaIA é uma alternativa ao PromptFoo?",
     answer:
-      "Sim, pra quem quer testar e comparar prompts sem configurar YAML nem rodar nada por linha de comando. O PromptFoo é uma ferramenta open-source focada em desenvolvedores; o OptiPrompt é hospedado, com interface visual pronta pra qualquer pessoa da agência rodar testes A/B de prompts, comparar custo/latência/qualidade entre modelos e exportar relatório pro cliente — sem precisar de chaves de API próprias nem ambiente de desenvolvimento.",
+      "Sim, pra quem quer testar e comparar prompts sem configurar YAML nem rodar nada por linha de comando. O PromptFoo é uma ferramenta open-source focada em desenvolvedores; o OtimizaIA é hospedado, com interface visual pronta pra qualquer pessoa da agência rodar testes A/B de prompts, comparar custo/latência/qualidade entre modelos e exportar relatório pro cliente — sem precisar de chaves de API próprias nem ambiente de desenvolvimento.",
   },
   {
     question: "Consigo colocar minha marca no relatório para o meu cliente?",
     answer:
-      "Sim — no plano Enterprise você adiciona seu logo e exporta um relatório PDF whitelabel, sem nenhuma marca do OptiPrompt visível para o cliente final.",
+      "Sim — no plano Enterprise você adiciona seu logo e exporta um relatório PDF whitelabel, sem nenhuma marca do OtimizaIA visível para o cliente final.",
   },
   {
     question: "O que acontece se eu ultrapassar os créditos do plano?",

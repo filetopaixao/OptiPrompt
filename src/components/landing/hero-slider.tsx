@@ -53,7 +53,7 @@ export function HeroSlider() {
           <div className="relative h-full w-full overflow-hidden rounded-lg">
             <Image
               src="/hero/prompt-test-workspace-v2.png"
-              alt="Comparação de custo entre modelos de IA no painel do OptiPrompt"
+              alt="Comparação de custo entre modelos de IA no painel do OtimizaIA"
               fill
               sizes="(max-width: 1024px) 100vw, 600px"
               className="object-contain"

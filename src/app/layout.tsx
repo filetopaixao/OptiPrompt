@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   // Base pra resolver URLs relativas de OG/Twitter image e canonical em
   // todas as páginas — sem isso o Next não consegue montar URL absoluta.
   metadataBase: new URL("https://otimizaia.app"),
-  title: "OptiPrompt",
+  title: "OtimizaIA",
   description: "Teste, compare custos e versione prompts em múltiplos modelos de IA.",
   verification: { google: "W1lf-27wYAdDwN7BpLt7aGtqJPrh0n2PqfMdcjdQH_k" },
 };

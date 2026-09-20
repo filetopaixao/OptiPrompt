@@ -15,13 +15,13 @@ export function Logo({ href = "/", size = 28, className, textClassName }: LogoPr
     <span className={cn("inline-flex items-center gap-2 font-semibold", className)}>
       <Image
         src="/logo-icon.png"
-        alt="OptiPrompt"
+        alt="OtimizaIA"
         width={size}
         height={size}
         className="shrink-0"
       />
       <span className={cn("whitespace-nowrap", textClassName)}>
-        Opti<span className="text-[#00b8c8]">Prompt</span>
+        Otimiza<span className="text-[#00ab88]">IA</span>
       </span>
     </span>
   );

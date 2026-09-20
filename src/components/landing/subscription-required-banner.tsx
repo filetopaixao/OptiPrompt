@@ -7,7 +7,7 @@ export function SubscriptionRequiredBanner() {
         <AlertTriangle className="size-4 shrink-0" />
         <p>
           Identificamos que o seu pagamento não foi concluído. Escolha um plano abaixo e informe
-          um cartão válido para desbloquear o OptiPrompt.{" "}
+          um cartão válido para desbloquear o OtimizaIA.{" "}
           <a href="#planos" className="font-medium underline underline-offset-2">
             Ver planos
           </a>

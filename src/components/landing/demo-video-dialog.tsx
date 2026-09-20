@@ -18,7 +18,7 @@ export function DemoVideoDialog() {
       </DialogTrigger>
       <DialogContent className="max-w-3xl p-0 sm:max-w-3xl">
         {/* Título só pra leitor de tela — o conteúdo visual é o vídeo em si. */}
-        <DialogTitle className="sr-only">Demonstração do OptiPrompt</DialogTitle>
+        <DialogTitle className="sr-only">Demonstração do OtimizaIA</DialogTitle>
         <video
           src="/demonstracao.mp4"
           controls

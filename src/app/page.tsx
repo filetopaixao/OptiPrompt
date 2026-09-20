@@ -11,7 +11,7 @@ import { SubscriptionRequiredBanner } from "@/components/landing/subscription-re
 
 export const dynamic = "force-dynamic";
 
-const TITLE = "OptiPrompt — Testes de Prompts e AI FinOps para Agências";
+const TITLE = "OtimizaIA — Testes de Prompts e AI FinOps para Agências";
 const DESCRIPTION =
   "Compare custo, velocidade e qualidade entre modelos de IA (GPT, Claude, Gemini e mais) antes de escalar sua operação. A alternativa hospedada ao PromptFoo para agências rodarem testes de prompts sem código, com créditos inclusos e sem chaves de API separadas.";
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: "https://otimizaia.app",
-    siteName: "OptiPrompt",
+    siteName: "OtimizaIA",
     locale: "pt_BR",
     type: "website",
   },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 const softwareAppJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "OptiPrompt",
+  name: "OtimizaIA",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description: DESCRIPTION,

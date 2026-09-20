@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 const TESTIMONIALS = [
   {
     quote:
-      "Trocamos o modelo padrão de um cliente depois de ver a projeção de custo no OptiPrompt — economizamos 40% na conta de API sem perder qualidade na resposta.",
+      "Trocamos o modelo padrão de um cliente depois de ver a projeção de custo no OtimizaIA — economizamos 40% na conta de API sem perder qualidade na resposta.",
     author: "Marina Costa",
     role: "Head de IA, Nexus Digital",
   },
@@ -31,7 +31,7 @@ export function LandingTestimonials() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="mb-10 text-center">
-        <h2 className="text-3xl font-semibold tracking-tight">Agências que já economizam com OptiPrompt</h2>
+        <h2 className="text-3xl font-semibold tracking-tight">Agências que já economizam com OtimizaIA</h2>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {TESTIMONIALS.map((testimonial) => (

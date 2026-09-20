@@ -20,7 +20,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       <header className="flex flex-col gap-3 border-b bg-background px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2">
           <ShieldAlert className="size-5 text-primary" />
-          <span className="font-semibold">OptiPrompt — Painel interno</span>
+          <span className="font-semibold">OtimizaIA — Painel interno</span>
           <form
             action={async () => {
               "use server";
