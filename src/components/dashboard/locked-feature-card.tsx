@@ -17,10 +17,10 @@ export function LockedFeatureCard({
 }) {
   return (
     <div className="relative h-96 overflow-hidden rounded-xl">
-      <div aria-hidden className="pointer-events-none h-full select-none overflow-hidden blur-xl">
+      <div aria-hidden className="pointer-events-none h-full select-none overflow-hidden blur-md">
         {previewContent}
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80 p-6 text-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/45 p-6 text-center backdrop-blur-[1px]">
         <Lock className="size-6 text-muted-foreground" />
         <p className="text-sm font-semibold">Recurso bloqueado</p>
         <p className="max-w-xs text-sm text-muted-foreground">{message}</p>
