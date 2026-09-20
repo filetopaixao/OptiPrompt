@@ -11,7 +11,7 @@ const SLIDES = [
   { id: "report", label: "Teste de prompt" },
 ] as const;
 
-const AUTO_ADVANCE_INTERVAL_MS = 5000;
+const AUTO_ADVANCE_INTERVAL_MS = 7000;
 
 export function HeroSlider() {
   const [active, setActive] = useState(0);
