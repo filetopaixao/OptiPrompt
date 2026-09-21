@@ -10,10 +10,10 @@ export interface PlanSummary {
   monthlyCreditLimit: number;
 }
 
-/** Planos internos (ex.: contas de teste com cota mínima, ou o Gratuito —
- * ver src/lib/plans/trial.ts) que não devem aparecer na página pública de
- * preços; só o admin atribui esses planos manualmente. */
-const HIDDEN_PLAN_SLUGS = new Set(["teste-gratis", TRIAL_PLAN_SLUG]);
+/** Planos internos (o Gratuito — ver src/lib/plans/trial.ts) que não devem
+ * aparecer na página pública de preços; só o admin atribui esses planos
+ * manualmente. */
+const HIDDEN_PLAN_SLUGS = new Set([TRIAL_PLAN_SLUG]);
 
 export async function listPlans(): Promise<PlanSummary[]> {
   const plans = await prisma.plan.findMany({ orderBy: { priceInCents: "asc" } });
