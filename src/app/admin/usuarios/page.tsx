@@ -15,6 +15,8 @@ const STATUS_LABEL: Record<string, string> = {
   INACTIVE: "Inativa",
 };
 
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" });
+
 export default async function UsuariosAdminPage() {
   const [users, plans] = await Promise.all([
     prisma.user.findMany({
@@ -26,7 +28,8 @@ export default async function UsuariosAdminPage() {
         subscriptionStatus: true,
         creditsUsedThisCycle: true,
         bonusCredits: true,
-        plan: { select: { id: true, name: true, priceInCents: true } },
+        trialEndsAt: true,
+        plan: { select: { id: true, name: true, priceInCents: true, fixedMonthlyCreditLimit: true } },
       },
     }),
     prisma.plan.findMany({ orderBy: { priceInCents: "asc" } }),
@@ -49,7 +52,7 @@ export default async function UsuariosAdminPage() {
 
       <div className="flex flex-col gap-2">
         {users.map((user) => {
-          const creditLimit = user.plan ? getMonthlyCreditLimit(user.plan.priceInCents) : 0;
+          const creditLimit = user.plan ? getMonthlyCreditLimit(user.plan) : 0;
           const creditsTotal = creditLimit + user.bonusCredits;
           // Mesma convenção do dashboard do usuário (disponível/total) — o
           // formato antigo (usado/total) causava confusão por parecer um
@@ -69,7 +72,14 @@ export default async function UsuariosAdminPage() {
                   <p className="truncate text-sm text-muted-foreground">{user.email}</p>
                 </div>
 
-                <div className="text-sm text-muted-foreground">{user.plan?.name ?? "Sem plano"}</div>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  {user.plan?.name ?? "Sem plano"}
+                  {user.trialEndsAt && (
+                    <Badge variant="outline" className="text-xs font-normal">
+                      Trial até {dateFormatter.format(user.trialEndsAt)}
+                    </Badge>
+                  )}
+                </div>
 
                 <div className="flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary">
                   <Zap className="size-3.5" />

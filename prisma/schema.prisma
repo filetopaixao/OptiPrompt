@@ -70,8 +70,13 @@ model Plan {
   /// Preço da assinatura em centavos. O teto mensal de créditos é derivado
   /// daqui (20% do valor) — ver getMonthlyCreditLimit em credit-converter.ts.
   priceInCents Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  /// Sobrescreve o teto mensal de créditos calculado a partir do preço —
+  /// usado pelo plano "Gratuito" (ver src/lib/plans/trial.ts), que tem
+  /// priceInCents 0 mas precisa de um teto próprio (300 créditos). null em
+  /// todos os planos pagos, que continuam derivando do preço normalmente.
+  fixedMonthlyCreditLimit Int?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   users User[]
 
@@ -113,6 +118,13 @@ model User {
   /// não pode comprar pacotes avulsos (ver checkout-credits/route.ts).
   cancelAtPeriodEnd Boolean   @default(false)
   currentPeriodEnd  DateTime?
+
+  /// Prazo do plano "Gratuito" criado pelo admin (ver src/lib/plans/trial.ts
+  /// e src/lib/auth/expire-trial.ts) — passado esse prazo, a conta perde o
+  /// plano (planId vira null, subscriptionStatus vira INACTIVE) na próxima
+  /// vez que ela acessar /app, forçando a escolha de uma assinatura paga.
+  /// null em toda conta que nunca teve o plano Gratuito.
+  trialEndsAt DateTime?
 
   /// Chave OpenRouter provisionada automaticamente pra esta conta (ver
   /// src/lib/openrouter/client.ts) — todas as execuções desse usuário usam

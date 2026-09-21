@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
+import { expireTrialIfNeeded } from "./expire-trial";
 import { getCurrentUserId } from "./current-user";
 
 export interface ActiveSubscriptionUser {
@@ -39,8 +40,6 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
       name: true,
       mustChangePassword: true,
       projectId: true,
-      subscriptionStatus: true,
-      plan: { select: { name: true, slug: true } },
       project: { select: { ownerId: true } },
     },
   });
@@ -54,15 +53,29 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
 
   // Conta colaboradora de projeto (ver User.projectId): não tem assinatura
   // própria, tudo isso vem do dono do projeto.
-  const billingOwner = user.project
-    ? await prisma.user.findUniqueOrThrow({
-        where: { id: user.project.ownerId },
-        select: { subscriptionStatus: true, plan: { select: { name: true, slug: true } } },
-      })
-    : user;
+  const billingOwnerId = user.project?.ownerId ?? userId;
+
+  // Lazy: se o dono está num trial do plano Gratuito vencido (ver
+  // src/lib/plans/trial.ts), essa chamada já derruba o plano dele antes de
+  // buscarmos subscriptionStatus abaixo — sem isso, uma conta trial vencida
+  // ficaria "ACTIVE" pra sempre. Sempre busca o dono de novo (mesmo quando é
+  // a própria conta) pra nunca devolver dado desatualizado depois do update.
+  await expireTrialIfNeeded(billingOwnerId);
+
+  const billingOwner = await prisma.user.findUniqueOrThrow({
+    where: { id: billingOwnerId },
+    select: {
+      subscriptionStatus: true,
+      trialEndsAt: true,
+      plan: { select: { name: true, slug: true } },
+    },
+  });
 
   if (billingOwner.subscriptionStatus !== "ACTIVE") {
-    redirect("/?assinatura=necessaria");
+    // trialEndsAt continua marcado (ver expireTrialIfNeeded) enquanto o
+    // motivo da inatividade for o trial vencido — só some quando o admin
+    // muda o plano ou uma assinatura paga é ativada (webhook do Stripe).
+    redirect(billingOwner.trialEndsAt !== null ? "/?assinatura=trial-expirada" : "/?assinatura=necessaria");
   }
 
   return {

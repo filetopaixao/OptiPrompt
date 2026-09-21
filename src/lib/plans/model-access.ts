@@ -1,4 +1,5 @@
 import { MODEL_CATALOG, type ModelId } from "@/types/models";
+import { TRIAL_PLAN_SLUG } from "./trial";
 
 /**
  * Regras de acesso por plano — usadas tanto na UI (ModelSelector, dashboard,
@@ -24,17 +25,20 @@ const STARTER_MAX_SIMULTANEOUS_MODELS = 4;
 const PLANS_WITH_COST_PROJECTION = new Set(["pro", "agencia"]);
 const PLANS_WITH_VERSION_COMPARE = new Set(["pro", "agencia"]);
 
-/** Modelos que o plano do usuário permite selecionar — Starter vê só o
- * catálogo reduzido, os demais planos veem tudo. */
+/** Modelos que o plano do usuário permite selecionar — Starter e o
+ * Gratuito (ver src/lib/plans/trial.ts) veem só o catálogo reduzido, os
+ * demais planos veem tudo. */
 export function getAllowedModelIds(planSlug: string | null | undefined): ModelId[] {
-  if (planSlug === "starter") return STARTER_ALLOWED_MODEL_IDS;
+  if (planSlug === "starter" || planSlug === TRIAL_PLAN_SLUG) return STARTER_ALLOWED_MODEL_IDS;
   return MODEL_CATALOG.map((model) => model.id);
 }
 
 /** Teto de modelos comparáveis numa única execução — Infinity nos planos
  * sem limite (a única trava real acaba sendo o tamanho do catálogo). */
 export function getMaxSimultaneousModels(planSlug: string | null | undefined): number {
-  return planSlug === "starter" ? STARTER_MAX_SIMULTANEOUS_MODELS : Infinity;
+  return planSlug === "starter" || planSlug === TRIAL_PLAN_SLUG
+    ? STARTER_MAX_SIMULTANEOUS_MODELS
+    : Infinity;
 }
 
 /** "Projeção de custo em escala" (o gráfico de requisições/mês) — recurso

@@ -65,7 +65,8 @@ export default async function AgenciasPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
       />
       <LandingNav />
-      {assinatura === "necessaria" && <SubscriptionRequiredBanner />}
+      {assinatura === "necessaria" && <SubscriptionRequiredBanner reason="pagamento" />}
+      {assinatura === "trial-expirada" && <SubscriptionRequiredBanner reason="trial" />}
       <main className="flex-1">
         <LandingHero />
         <LandingBenefits />

@@ -28,13 +28,20 @@ export function creditsToUSD(credits: number): number {
 }
 
 /** Teto mensal de créditos = 20% do valor da assinatura do plano, convertido
- * em créditos. Derivado do preço, não armazenado, para nunca dessincronizar.
+ * em créditos. Derivado do preço, não armazenado, para nunca dessincronizar
+ * — exceto quando o plano tem fixedMonthlyCreditLimit setado (ex.: o plano
+ * Gratuito, que tem preço 0 mas precisa de um teto próprio; ver
+ * src/lib/plans/trial.ts), caso em que esse valor manda.
  *
  * Calculado inteiramente em centavos (1 centavo = 10 créditos) em vez de
  * passar por R$ fracionário — evita erro de ponto flutuante do tipo
  * "247 * 0.2 = 49.400000000000006" virar 49.401 créditos por causa do ceil. */
-export function getMonthlyCreditLimit(planPriceInCents: number): number {
-  const ceilingInCents = Math.round(planPriceInCents * PLAN_CREDIT_CEILING_RATIO);
+export function getMonthlyCreditLimit(plan: {
+  priceInCents: number;
+  fixedMonthlyCreditLimit: number | null;
+}): number {
+  if (plan.fixedMonthlyCreditLimit !== null) return plan.fixedMonthlyCreditLimit;
+  const ceilingInCents = Math.round(plan.priceInCents * PLAN_CREDIT_CEILING_RATIO);
   return ceilingInCents * 10;
 }
 

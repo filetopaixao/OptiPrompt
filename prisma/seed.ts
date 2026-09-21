@@ -28,6 +28,16 @@ async function main() {
     create: { name: "Enterprise", slug: "agencia", priceInCents: 59700 },
   });
 
+  // Plano interno "Gratuito" — só o admin atribui (ver admin/usuarios),
+  // nunca aparece na página pública de preços (ver HIDDEN_PLAN_SLUGS em
+  // src/lib/plans.ts). Preço 0 exige fixedMonthlyCreditLimit, já que o
+  // teto normal (20% do preço) daria zero créditos.
+  await prisma.plan.upsert({
+    where: { slug: "gratuito" },
+    update: { name: "Gratuito", priceInCents: 0, fixedMonthlyCreditLimit: 300 },
+    create: { name: "Gratuito", slug: "gratuito", priceInCents: 0, fixedMonthlyCreditLimit: 300 },
+  });
+
   await prisma.user.upsert({
     where: { email: "demo@optiprompt.dev" },
     update: { subscriptionStatus: "ACTIVE", creditsUsedThisCycle: 18_000 },

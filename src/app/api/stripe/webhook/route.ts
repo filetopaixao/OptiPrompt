@@ -63,6 +63,11 @@ async function handleSubscriptionCheckoutCompleted(session: Stripe.Checkout.Sess
       subscriptionStatus: "ACTIVE",
       cancelAtPeriodEnd: subscription?.cancel_at_period_end ?? false,
       currentPeriodEnd: subscription ? getSubscriptionPeriodEnd(subscription) : null,
+      // Uma assinatura paga de verdade encerra qualquer rótulo de trial
+      // vencido (ver requireActiveSubscription) — sem isso, uma conta que
+      // veio do plano Gratuito e depois teve a assinatura paga recusada
+      // mostraria "seu teste grátis acabou" em vez do aviso de pagamento.
+      trialEndsAt: null,
     },
   });
 

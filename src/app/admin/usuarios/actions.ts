@@ -7,6 +7,7 @@ import type { SubscriptionStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getMonthlyCreditLimit } from "@/lib/credits/credit-converter";
+import { computeTrialEndsAt } from "@/lib/plans/trial";
 import { syncOpenRouterLimit } from "@/lib/openrouter/client";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -34,6 +35,11 @@ export async function createFreeUser(input: {
     return { ok: false, error: "Já existe uma conta com este e-mail." };
   }
 
+  const plan = await prisma.plan.findUnique({ where: { id: input.planId }, select: { slug: true } });
+  if (!plan) {
+    return { ok: false, error: "Plano inválido." };
+  }
+
   // Senha temporária gerada pelo admin — exibida uma única vez na UI.
   // mustChangePassword força a troca no primeiro login (ver /trocar-senha).
   const password = randomBytes(9).toString("base64url");
@@ -48,6 +54,9 @@ export async function createFreeUser(input: {
       subscriptionStatus: "ACTIVE",
       mustChangePassword: true,
       bonusCredits: Math.floor(input.initialCredits),
+      // Só o plano Gratuito ganha prazo — ver computeTrialEndsAt e
+      // expireTrialIfNeeded (lib/auth/expire-trial.ts).
+      trialEndsAt: computeTrialEndsAt(plan.slug),
     },
   });
 
@@ -62,11 +71,19 @@ export async function updateUserAccess(input: {
 }): Promise<ActionResult> {
   await requireAdmin();
 
+  // Recalcula o prazo do trial a cada troca de plano: vira null pra
+  // qualquer plano que não seja o Gratuito, e reinicia os 7 dias a partir
+  // de agora se o admin (re)atribuir o Gratuito manualmente.
+  const plan = input.planId
+    ? await prisma.plan.findUnique({ where: { id: input.planId }, select: { slug: true } })
+    : null;
+
   await prisma.user.update({
     where: { id: input.userId },
     data: {
       planId: input.planId || null,
       subscriptionStatus: input.subscriptionStatus,
+      trialEndsAt: computeTrialEndsAt(plan?.slug),
     },
   });
   await syncOpenRouterLimit(input.userId);
@@ -140,7 +157,7 @@ export async function adjustCurrentCredits(input: {
     select: {
       creditsUsedThisCycle: true,
       bonusCredits: true,
-      plan: { select: { priceInCents: true } },
+      plan: { select: { priceInCents: true, fixedMonthlyCreditLimit: true } },
     },
   });
 
@@ -156,7 +173,7 @@ export async function adjustCurrentCredits(input: {
 
   revalidatePath("/admin/usuarios");
 
-  const creditsTotal = (user.plan ? getMonthlyCreditLimit(user.plan.priceInCents) : 0) + user.bonusCredits;
+  const creditsTotal = (user.plan ? getMonthlyCreditLimit(user.plan) : 0) + user.bonusCredits;
   const newCreditsAvailable = Math.max(0, creditsTotal - newCreditsUsedThisCycle);
 
   return { ok: true, newCreditsAvailable };
