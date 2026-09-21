@@ -24,20 +24,20 @@ const PROVIDER_LOGOS: Partial<Record<Provider, string>> = {
   MISTRAL: "/logos/mistral.svg",
 };
 
-/** Monta a vitrine direto do catálogo (types/models.ts) — nunca fica
- * desatualizada quando um modelo é trocado ou adicionado, igual à resposta
- * "quais modelos" da FAQ. */
+/** Monta a vitrine direto do catálogo (types/models.ts) — lista todos os
+ * modelos de cada provedor (nunca fica desatualizada quando um modelo é
+ * trocado ou adicionado, igual à resposta "quais modelos" da FAQ). */
 function buildProviderShowcase() {
   return PROVIDER_ORDER.map((provider) => {
-    const models = MODEL_CATALOG.filter((model) => model.provider === provider)
-      .slice(0, 2)
-      .map((model) => model.label);
+    const models = MODEL_CATALOG.filter((model) => model.provider === provider).map(
+      (model) => model.label,
+    );
 
     return {
       provider,
       label: PROVIDER_LABELS[provider]!,
       logo: PROVIDER_LOGOS[provider]!,
-      models: models.join(" · "),
+      models,
     };
   }).filter((entry) => entry.models.length > 0);
 }
@@ -61,13 +61,17 @@ export function LandingModelProviders() {
           {providers.map(({ provider, label, logo, models }) => (
             <Card key={provider} className="border-dashed bg-card/60 shadow-none">
               <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
-                <span className="flex size-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
                   {/* eslint-disable-next-line @next/next/no-img-element -- ícones estáticos pequenos, sem necessidade do pipeline de otimização (e SVG não passa por ele por padrão). */}
                   <img src={logo} alt={label} className="size-7 object-contain" />
                 </span>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col items-center gap-1">
                   <span className="text-sm font-bold tracking-tight">{label}</span>
-                  <span className="text-xs text-muted-foreground">{models}</span>
+                  <ul className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+                    {models.map((model) => (
+                      <li key={model}>{model}</li>
+                    ))}
+                  </ul>
                 </div>
               </CardContent>
             </Card>
