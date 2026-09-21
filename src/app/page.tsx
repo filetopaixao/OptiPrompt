@@ -4,9 +4,9 @@ import { LandingBenefits } from "@/components/landing/landing-benefits";
 import { LandingFAQ } from "@/components/landing/landing-faq";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHero } from "@/components/landing/landing-hero";
+import { LandingModelProviders } from "@/components/landing/landing-model-providers";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { LandingPricing } from "@/components/landing/landing-pricing";
-import { LandingTestimonials } from "@/components/landing/landing-testimonials";
 import { SubscriptionRequiredBanner } from "@/components/landing/subscription-required-banner";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +71,7 @@ export default async function AgenciasPage({
         <LandingHero />
         <LandingBenefits />
         <LandingPricing plans={plans} />
-        <LandingTestimonials />
+        <LandingModelProviders />
         <LandingFAQ />
       </main>
       <LandingFooter />
