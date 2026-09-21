@@ -6,13 +6,13 @@ import {
 } from "@/components/ui/accordion";
 import { MODEL_CATALOG, type Provider } from "@/types/models";
 
-const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "GROQ", "DEEPSEEK", "MISTRAL"];
+const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "META", "DEEPSEEK", "MISTRAL"];
 
 const PROVIDER_LABELS: Partial<Record<Provider, string>> = {
   OPENAI: "OpenAI",
   ANTHROPIC: "Anthropic",
   GOOGLE: "Google",
-  GROQ: "Groq (open-weight)",
+  META: "Meta",
   DEEPSEEK: "DeepSeek",
   MISTRAL: "Mistral",
 };

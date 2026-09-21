@@ -9,10 +9,20 @@
  * cada provedor. "Provider" aqui vira só um agrupamento visual da UI.
  */
 
-/** MARITACA fica no tipo só por compatibilidade com execuções históricas no
- * banco (de antes da migração pro OpenRouter, que não tem modelos Sabiá) —
- * nenhum modelo novo usa esse provider. */
-export type Provider = "OPENAI" | "ANTHROPIC" | "GOOGLE" | "MARITACA" | "GROQ" | "DEEPSEEK" | "MISTRAL";
+/** MARITACA e GROQ ficam no tipo só por compatibilidade com execuções
+ * históricas no banco (MARITACA de antes da migração pro OpenRouter, que
+ * não tem modelos Sabiá; GROQ era o agrupamento visual antigo de GPT-OSS e
+ * Llama, hoje corretamente atribuídos a OPENAI e META) — nenhum modelo novo
+ * usa nenhum dos dois. */
+export type Provider =
+  | "OPENAI"
+  | "ANTHROPIC"
+  | "GOOGLE"
+  | "MARITACA"
+  | "GROQ"
+  | "DEEPSEEK"
+  | "MISTRAL"
+  | "META";
 
 export type ModelTier = "PREMIUM" | "COST_EFFECTIVE";
 
@@ -66,24 +76,26 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
     label: "Gemini 3.8 Flash",
     promoTag: "O novo Custo-benefício matador",
   },
-  // GPT-OSS continua agrupado como "GROQ" na UI (família open-weight) mesmo
-  // chamado via OpenRouter — o provedor de inferência real por baixo pode
-  // variar (Groq, Cerebras etc.), não afeta o app.
-  { id: "openai/gpt-oss-120b", provider: "GROQ", tier: "PREMIUM", label: "GPT-OSS 120B" },
-  { id: "openai/gpt-oss-20b", provider: "GROQ", tier: "COST_EFFECTIVE", label: "GPT-OSS 20B" },
-  // Llama forçado a rodar na Groq (forceProvider) — confirmado via
-  // GET /api/v1/models/{id}/endpoints que a Groq serve esses dois; os
-  // modelos Llama 4 (Maverick/Scout) ainda não têm backend Groq no OpenRouter.
+  // GPT-OSS é modelo da própria OpenAI (open-weight), só chamado via
+  // OpenRouter — o provedor de inferência real por baixo pode variar (Groq,
+  // Cerebras etc.), não afeta a atribuição de fabricante nem o app.
+  { id: "openai/gpt-oss-120b", provider: "OPENAI", tier: "PREMIUM", label: "GPT-OSS 120B" },
+  { id: "openai/gpt-oss-20b", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-OSS 20B" },
+  // Llama é da Meta — forceProvider força o roteamento pra rodar na Groq
+  // (confirmado via GET /api/v1/models/{id}/endpoints que a Groq serve
+  // esses dois; os modelos Llama 4 Maverick/Scout ainda não têm backend
+  // Groq no OpenRouter), mas isso é só o backend de inferência, não muda o
+  // fabricante do modelo.
   {
     id: "meta-llama/llama-3.3-70b-instruct",
-    provider: "GROQ",
+    provider: "META",
     tier: "PREMIUM",
     label: "Llama 3.3 70B",
     forceProvider: "groq",
   },
   {
     id: "meta-llama/llama-3.1-8b-instruct",
-    provider: "GROQ",
+    provider: "META",
     tier: "COST_EFFECTIVE",
     label: "Llama 3.1 8B",
     forceProvider: "groq",

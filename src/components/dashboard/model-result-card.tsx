@@ -14,6 +14,7 @@ const PROVIDER_ACCENT: Record<Provider, string> = {
   GROQ: "bg-sky-600",
   DEEPSEEK: "bg-indigo-500",
   MISTRAL: "bg-amber-500",
+  META: "bg-blue-600",
 };
 
 const PROVIDER_LABELS: Record<Provider, string> = {
@@ -24,6 +25,7 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   GROQ: "Groq",
   DEEPSEEK: "DeepSeek",
   MISTRAL: "Mistral",
+  META: "Meta",
 };
 
 export function ModelResultCard({

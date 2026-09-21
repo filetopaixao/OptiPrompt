@@ -1,16 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { MODEL_CATALOG, type ModelId, type Provider } from "@/types/models";
+import { MODEL_CATALOG, type Provider } from "@/types/models";
 
 // Mesma ordem/rótulos usados no seletor de modelos e na FAQ (ver
 // components/dashboard/model-selector.tsx e landing-faq.tsx) — mantém a
 // vitrine consistente com o que o usuário realmente vê dentro do app.
-const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "GROQ", "DEEPSEEK", "MISTRAL"];
+const PROVIDER_ORDER: Provider[] = ["OPENAI", "ANTHROPIC", "GOOGLE", "META", "DEEPSEEK", "MISTRAL"];
 
 const PROVIDER_LABELS: Partial<Record<Provider, string>> = {
   OPENAI: "OpenAI",
   ANTHROPIC: "Anthropic",
   GOOGLE: "Google",
-  GROQ: "Groq",
+  META: "Meta",
   DEEPSEEK: "DeepSeek",
   MISTRAL: "Mistral",
 };
@@ -19,17 +19,9 @@ const PROVIDER_LOGOS: Partial<Record<Provider, string>> = {
   OPENAI: "/logos/openai.svg",
   ANTHROPIC: "/logos/anthropic.svg",
   GOOGLE: "/logos/google.svg",
-  GROQ: "/logos/groq.png",
+  META: "/logos/meta.svg",
   DEEPSEEK: "/logos/deepseek.svg",
   MISTRAL: "/logos/mistral.svg",
-};
-
-/** Exemplos de modelo a destacar por provedor, na ordem em que aparecem —
- * normalmente os 2 primeiros do catálogo já bastam, mas a Groq serve tanto
- * GPT-OSS quanto Llama (ver types/models.ts) e a família Llama é a mais
- * reconhecida do grupo, então é curada explicitamente pra não ficar de fora. */
-const FEATURED_MODEL_IDS: Partial<Record<Provider, ModelId[]>> = {
-  GROQ: ["meta-llama/llama-3.3-70b-instruct", "openai/gpt-oss-120b"],
 };
 
 /** Monta a vitrine direto do catálogo (types/models.ts) — nunca fica
@@ -37,15 +29,9 @@ const FEATURED_MODEL_IDS: Partial<Record<Provider, ModelId[]>> = {
  * "quais modelos" da FAQ. */
 function buildProviderShowcase() {
   return PROVIDER_ORDER.map((provider) => {
-    const catalogForProvider = MODEL_CATALOG.filter((model) => model.provider === provider);
-    const featuredIds = FEATURED_MODEL_IDS[provider];
-    const models = (
-      featuredIds
-        ? featuredIds
-            .map((id) => catalogForProvider.find((model) => model.id === id))
-            .filter((model) => model !== undefined)
-        : catalogForProvider.slice(0, 2)
-    ).map((model) => model.label);
+    const models = MODEL_CATALOG.filter((model) => model.provider === provider)
+      .slice(0, 2)
+      .map((model) => model.label);
 
     return {
       provider,
@@ -67,7 +53,7 @@ export function LandingModelProviders() {
             Compatível com os principais provedores e LLMs do mercado
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Testes em paralelo entre OpenAI, Anthropic, Google, Groq e mais — tudo numa única
+            Testes em paralelo entre OpenAI, Anthropic, Google, Meta e mais — tudo numa única
             comparação.
           </p>
         </div>
