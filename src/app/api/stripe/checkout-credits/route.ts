@@ -29,14 +29,14 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { subscriptionStatus: true, cancelAtPeriodEnd: true, managedByUserId: true },
+    select: { subscriptionStatus: true, cancelAtPeriodEnd: true, projectId: true },
   });
-  // Conta de cliente gerida por uma agência (ver User.managedByUserId) não
-  // tem assinatura própria — créditos avulsos são comprados pela agência,
+  // Conta colaboradora de um projeto (ver User.projectId) não tem assinatura
+  // própria — créditos avulsos são comprados pelo dono da conta Enterprise,
   // não por quem só tem acesso à plataforma.
-  if (user.managedByUserId) {
+  if (user.projectId) {
     return NextResponse.json(
-      { error: "Sua conta é gerida por uma agência — fale com o administrador dela para comprar créditos." },
+      { error: "Sua conta faz parte de um projeto — fale com o dono da conta Enterprise para comprar créditos." },
       { status: 403 },
     );
   }

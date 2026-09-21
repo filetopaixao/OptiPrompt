@@ -14,18 +14,18 @@ import { CancelSubscriptionButton } from "@/components/dashboard/cancel-subscrip
 export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
-  // Conta de cliente gerida por uma agência Enterprise (ver
-  // User.managedByUserId): não tem assinatura própria pra gerenciar aqui —
-  // plano, créditos e cancelamento são todos da agência.
+  // Conta colaboradora de um projeto Enterprise (ver User.projectId): não
+  // tem assinatura própria pra gerenciar aqui — plano, créditos e
+  // cancelamento são todos do dono da conta.
   const { isManagedAccount } = await requireActiveSubscription();
   if (isManagedAccount) {
     return (
       <div className="mx-auto max-w-2xl p-4 sm:p-6">
         <h1 className="text-2xl font-semibold tracking-tight">Planos e créditos</h1>
         <p className="mt-4 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
-          Sua conta é gerida por uma agência — plano, créditos e cobrança são administrados por
-          quem te deu acesso à plataforma. Fale com o administrador da sua conta pra qualquer
-          dúvida sobre assinatura ou créditos.
+          Sua conta faz parte de um projeto — plano, créditos e cobrança são administrados por
+          quem te deu acesso à plataforma. Fale com o dono da conta Enterprise pra qualquer dúvida
+          sobre assinatura ou créditos.
         </p>
       </div>
     );

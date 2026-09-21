@@ -7,11 +7,16 @@ export interface ActiveSubscriptionUser {
   name: string | null;
   planName: string | null;
   planSlug: string | null;
-  /** true quando esta conta é um cliente gerido por uma agência Enterprise
-   * (ver User.managedByUserId) — plano/assinatura acima já vêm do dono,
-   * não desta conta. Usado pra esconder telas de billing/gestão de clientes
-   * que só fazem sentido pra quem realmente paga a assinatura. */
+  /** true quando esta conta é colaboradora de um projeto dentro de uma
+   * agência Enterprise (ver User.projectId) — plano/assinatura acima já
+   * vêm do dono do projeto, não desta conta. Usado pra esconder telas de
+   * billing/gestão de projetos que só fazem sentido pra quem realmente
+   * paga a assinatura. */
   isManagedAccount: boolean;
+  /** Projeto do qual esta conta é colaboradora (ver User.projectId) — null
+   * pra conta dona/comum. Usado pra escopar o histórico compartilhado (ver
+   * listExecutionsForProject). */
+  projectId: string | null;
 }
 
 /**
@@ -33,24 +38,25 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
       email: true,
       name: true,
       mustChangePassword: true,
-      managedByUserId: true,
+      projectId: true,
       subscriptionStatus: true,
       plan: { select: { name: true, slug: true } },
+      project: { select: { ownerId: true } },
     },
   });
 
   // Senha provisória (conta criada pelo admin ou por uma agência Enterprise
-  // pra um cliente) — troca obrigatória antes de qualquer outra coisa,
-  // inclusive antes de checar assinatura.
+  // pra um colaborador de projeto) — troca obrigatória antes de qualquer
+  // outra coisa, inclusive antes de checar assinatura.
   if (user.mustChangePassword) {
     redirect("/trocar-senha");
   }
 
-  // Conta de cliente gerida (ver User.managedByUserId): não tem assinatura
-  // própria, tudo isso vem de quem gere ela.
-  const billingOwner = user.managedByUserId
+  // Conta colaboradora de projeto (ver User.projectId): não tem assinatura
+  // própria, tudo isso vem do dono do projeto.
+  const billingOwner = user.project
     ? await prisma.user.findUniqueOrThrow({
-        where: { id: user.managedByUserId },
+        where: { id: user.project.ownerId },
         select: { subscriptionStatus: true, plan: { select: { name: true, slug: true } } },
       })
     : user;
@@ -64,6 +70,7 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
     name: user.name,
     planName: billingOwner.plan?.name ?? null,
     planSlug: billingOwner.plan?.slug ?? null,
-    isManagedAccount: user.managedByUserId !== null,
+    isManagedAccount: user.projectId !== null,
+    projectId: user.projectId,
   };
 }

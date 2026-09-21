@@ -12,15 +12,20 @@ export function HistoryExplorer({
   executions,
   canCompareVersions,
   showingTeamHistory = false,
+  showingProjectHistory = false,
   currentUserId,
 }: {
   executions: ExecutionDTO[];
   canCompareVersions: boolean;
   /** true quando é a visão agregada do dono Enterprise (ver
-   * listExecutionsForTeam) — inclui execuções da carteira de clientes. */
+   * listExecutionsForTeam) — inclui execuções de todos os projetos. */
   showingTeamHistory?: boolean;
-  /** Usado só pra destacar "Você" no badge de quem executou, na visão de
-   * equipe (ver ExecutionRow). */
+  /** true quando é a visão compartilhada de um colaborador de projeto (ver
+   * listExecutionsForProject) — inclui execuções dos demais colaboradores
+   * do mesmo projeto, mas não de outros projetos. */
+  showingProjectHistory?: boolean;
+  /** Usado só pra destacar "Você" no badge de quem executou, nas visões de
+   * equipe e de projeto (ver ExecutionRow). */
   currentUserId?: string;
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -58,7 +63,8 @@ export function HistoryExplorer({
             {canCompareVersions
               ? "Selecione duas execuções para comparar versões do prompt e sua performance."
               : "Acompanhe suas execuções anteriores."}
-            {showingTeamHistory && " Inclui execuções de toda a sua carteira de clientes."}
+            {showingTeamHistory && " Inclui execuções de todos os projetos da sua conta."}
+            {showingProjectHistory && " Inclui execuções de todos os colaboradores deste projeto."}
           </p>
         </div>
         {canCompareVersions ? (

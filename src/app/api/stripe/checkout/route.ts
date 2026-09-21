@@ -36,15 +36,15 @@ export async function POST(request: Request) {
 
   const userId = await getCurrentUserId();
 
-  // Conta de cliente gerida por uma agência (ver User.managedByUserId) não
-  // assina o próprio plano — o acesso dela já vem da assinatura da agência.
-  const { managedByUserId } = await prisma.user.findUniqueOrThrow({
+  // Conta colaboradora de um projeto (ver User.projectId) não assina o
+  // próprio plano — o acesso dela já vem da assinatura do dono do projeto.
+  const { projectId } = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { managedByUserId: true },
+    select: { projectId: true },
   });
-  if (managedByUserId) {
+  if (projectId) {
     return NextResponse.json(
-      { error: "Sua conta é gerida por uma agência — fale com o administrador dela sobre o plano." },
+      { error: "Sua conta faz parte de um projeto — fale com o dono da conta Enterprise sobre o plano." },
       { status: 403 },
     );
   }

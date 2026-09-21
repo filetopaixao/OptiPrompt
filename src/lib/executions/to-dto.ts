@@ -1,12 +1,15 @@
-import type { Execution, ExecutionResult, Prompt, User } from "@prisma/client";
+import type { Execution, ExecutionResult, Prompt, Project, User } from "@prisma/client";
 import type { ExecutionDTO } from "@/types/execution";
 
 type ExecutionWithRelations = Execution & {
   prompt: Pick<Prompt, "name">;
   results: ExecutionResult[];
-  /** Só incluído na consulta de listExecutionsForTeam — ver comentário em
-   * ExecutionDTO.executedBy. */
-  user?: Pick<User, "id" | "name" | "email">;
+  /** Incluído em listExecutionsForProject e listExecutionsForTeam — ver
+   * comentário em ExecutionDTO.executedBy. `project` só vem populado na
+   * consulta de listExecutionsForTeam (ver ExecutionDTO.project). */
+  user?: Pick<User, "id" | "name" | "email"> & {
+    project?: Pick<Project, "id" | "name"> | null;
+  };
 };
 
 /** Mapeia as entidades do Prisma para o DTO exposto pela API. */
@@ -21,6 +24,9 @@ export function toExecutionDTO(execution: ExecutionWithRelations): ExecutionDTO 
     rule: execution.rule,
     executedBy: execution.user
       ? { id: execution.user.id, name: execution.user.name, email: execution.user.email }
+      : undefined,
+    project: execution.user?.project
+      ? { id: execution.user.project.id, name: execution.user.project.name }
       : undefined,
     results: execution.results.map((result) => ({
       id: result.id,

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Clock, FileOutput, Hash, Layers, User, Wallet, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, FileOutput, FolderKanban, Hash, Layers, User, Wallet, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -64,6 +64,12 @@ export function ExecutionRow({
             >
               <User className="size-3" />
               {isOwnExecution ? "Você" : execution.executedBy.name || execution.executedBy.email}
+            </Badge>
+          )}
+          {execution.project && (
+            <Badge variant="secondary" className="gap-1 text-xs font-normal">
+              <FolderKanban className="size-3" />
+              {execution.project.name}
             </Badge>
           )}
           {metrics.ruleSummary && (

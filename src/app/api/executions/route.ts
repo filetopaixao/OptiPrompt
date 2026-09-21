@@ -79,10 +79,10 @@ export async function POST(request: Request) {
 
   const { promptId, promptName, systemPrompt, userMessage, modelIds, rule } = parsed.data;
 
-  // Contas de cliente geridas por uma agência Enterprise (ver
-  // User.managedByUserId) não têm plano/créditos/chave OpenRouter próprios —
-  // tudo isso resolve pro dono. Prompt/execução continuam do userId real
-  // (quem efetivamente rodou), só o lado financeiro muda de dono.
+  // Contas colaboradoras de um projeto Enterprise (ver User.projectId) não
+  // têm plano/créditos/chave OpenRouter próprios — tudo isso resolve pro
+  // dono. Prompt/execução continuam do userId real (quem efetivamente
+  // rodou), só o lado financeiro muda de dono.
   const billingOwnerId = await getBillingOwnerId(userId);
 
   // Trava por baixo do que a UI já restringe (ModelSelector) — nunca confiar

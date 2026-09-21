@@ -9,11 +9,11 @@ const BASE_NAV_ITEMS = [
   { href: "/app/history", label: "Histórico" },
 ] as const;
 
-const CLIENTS_NAV_ITEM = { href: "/app/clients", label: "Clientes" } as const;
+const PROJECTS_NAV_ITEM = { href: "/app/projects", label: "Projetos" } as const;
 
-export function MainNav({ showClients = false }: { showClients?: boolean }) {
+export function MainNav({ showProjects = false }: { showProjects?: boolean }) {
   const pathname = usePathname();
-  const navItems = showClients ? [...BASE_NAV_ITEMS, CLIENTS_NAV_ITEM] : BASE_NAV_ITEMS;
+  const navItems = showProjects ? [...BASE_NAV_ITEMS, PROJECTS_NAV_ITEM] : BASE_NAV_ITEMS;
 
   return (
     <nav className="flex items-center gap-1">

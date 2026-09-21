@@ -11,16 +11,17 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const user = await requireActiveSubscription();
-  // Link "Clientes" só aparece pra quem é dono de fato da assinatura
-  // Enterprise — um cliente já gerido não gerencia outros clientes.
-  const showClients = user.planSlug === "agencia" && !user.isManagedAccount;
+  // Link "Projetos" só aparece pra quem é dono de fato da assinatura
+  // Enterprise — um colaborador já vinculado a um projeto não gerencia
+  // projetos.
+  const showProjects = user.planSlug === "agencia" && !user.isManagedAccount;
 
   return (
     <UsageProvider>
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-6 border-b bg-background/80 px-4 backdrop-blur sm:px-6">
           <Logo href={false} />
-          <MainNav showClients={showClients} />
+          <MainNav showProjects={showProjects} />
           <div className="ml-auto flex items-center gap-4">
             <UsageProgressBar />
             <UserMenu

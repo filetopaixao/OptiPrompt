@@ -121,13 +121,20 @@ model User {
   openRouterKeyHash String? @unique
   openRouterApiKey  String? @unique
 
-  /// Contas de cliente geridas por uma agência no plano Enterprise (ver
-  /// src/app/app/clients) — quando setado, plano/assinatura/créditos dessa
-  /// conta resolvem pro dono (ver getBillingOwnerId), não pra ela mesma. Uma
-  /// conta gerida não pode por sua vez gerir outras (hierarquia de 1 nível).
-  managedByUserId String?
-  managedBy       User?   @relation("ManagedUsers", fields: [managedByUserId], references: [id], onDelete: SetNull)
-  managedUsers    User[]  @relation("ManagedUsers")
+  /// Conta colaboradora de um projeto dentro de uma agência Enterprise (ver
+  /// src/app/app/projects) — quando setado, plano/assinatura/créditos dessa
+  /// conta resolvem pro dono do projeto (ver getBillingOwnerId), não pra ela
+  /// mesma. Histórico é compartilhado só entre colaboradores do mesmo
+  /// projeto (ver listExecutionsForProject) — projetos são isolados entre
+  /// si. onDelete: Cascade porque uma conta colaboradora só existe dentro do
+  /// projeto dela; apagar o projeto apaga os logins criados nele.
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  /// Projetos criados por esta conta quando ela é a dona de uma assinatura
+  /// Enterprise (ver src/app/app/projects) — uma conta colaboradora
+  /// (projectId setado) não cria projetos (hierarquia de 1 nível).
+  ownedProjects Project[] @relation("ProjectOwner")
 
   prompts                   Prompt[]
   executions                Execution[]
@@ -135,6 +142,25 @@ model User {
   creditPackPurchases       CreditPackPurchase[]
 
   @@map("users")
+}
+
+/// Projeto dentro de uma conta Enterprise (ver src/app/app/projects) —
+/// agrupa colaboradores que compartilham histórico entre si (ver
+/// listExecutionsForProject). Colaboradores de projetos diferentes do mesmo
+/// dono não veem o histórico uns dos outros; só o dono vê tudo agregado
+/// (ver listExecutionsForTeam).
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  ownerId String
+  owner   User   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  members User[]
+
+  @@index([ownerId])
+  @@map("projects")
 }
 
 model Prompt {
