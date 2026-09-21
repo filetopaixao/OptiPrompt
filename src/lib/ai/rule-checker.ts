@@ -34,6 +34,13 @@ export async function checkRule(
         role: "system",
         content:
           "Você verifica se uma resposta de IA respeita uma regra definida pelo usuário. " +
+          "Julgue a INTENÇÃO da regra, não apenas se palavras-chave dela aparecem literalmente na " +
+          'resposta. Por exemplo, se a regra é "não diga que você é uma IA", a resposta só FALHA se ' +
+          "ela afirmar, sobre si mesma, que é uma IA/assistente virtual/modelo de linguagem (ex.: " +
+          '"sou uma IA", "como um modelo de linguagem..."). Só mencionar o termo "IA" ou ' +
+          "\"inteligência artificial\" ao explicar um conceito ou responder sobre o assunto — sem " +
+          "isso ser uma afirmação sobre si mesma — NÃO é violação. Aplique esse mesmo raciocínio " +
+          "(intenção da regra, não a palavra isolada) pra qualquer outra regra. " +
           'Responda em português. Primeira linha: exatamente "PASSOU" ou "FALHOU". ' +
           "Segunda linha: uma frase curta (até 15 palavras) explicando por quê.",
       },
