@@ -14,7 +14,7 @@ import { CostProjection } from "./cost-projection";
 import { ExecutiveSummary } from "./executive-summary";
 import { LockedFeatureCard } from "./locked-feature-card";
 import { PremiumWarningDialog } from "./premium-warning-dialog";
-import { PromptEditorPanel } from "./prompt-editor-panel";
+import { PromptEditorPanel, type AttachedImage } from "./prompt-editor-panel";
 import { ResultsGrid } from "./results-grid";
 
 const SKIP_PREMIUM_WARNING_KEY = "optiprompt:skip-premium-warning";
@@ -76,6 +76,7 @@ export function DashboardWorkspace({
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userMessage, setUserMessage] = useState("");
   const [rule, setRule] = useState("");
+  const [attachedImage, setAttachedImage] = useState<AttachedImage | null>(null);
   // Vazio por padrão — obriga a escolha explícita do modelo em vez de rodar
   // sem querer com uma seleção pré-marcada.
   const [selectedModelIds, setSelectedModelIds] = useState<ModelId[]>([]);
@@ -99,6 +100,7 @@ export function DashboardWorkspace({
           promptName: promptName.trim() || undefined,
           systemPrompt,
           userMessage,
+          imageDataUrl: attachedImage?.dataUrl,
           modelIds: selectedModelIds,
           rule: rule.trim() || undefined,
         }),
@@ -124,6 +126,20 @@ export function DashboardWorkspace({
     } finally {
       setIsRunning(false);
     }
+  }
+
+  // Anexar imagem remove da seleção qualquer modelo que não aceite imagem —
+  // o ModelSelector já desabilita o checkbox pra impedir marcar um novo,
+  // mas um que já estivesse marcado antes do anexo precisa ser tirado aqui.
+  function handleAttachImage(image: AttachedImage) {
+    setAttachedImage(image);
+    setSelectedModelIds((current) => {
+      const compatible = current.filter((modelId) => getModelDefinition(modelId).supportsImages);
+      if (compatible.length < current.length) {
+        toast.warning("Alguns modelos selecionados não aceitam imagem e foram removidos.");
+      }
+      return compatible;
+    });
   }
 
   function handleSubmit() {
@@ -169,6 +185,9 @@ export function DashboardWorkspace({
         maxSelectableModels={maxSelectableModels}
         onSubmit={handleSubmit}
         isRunning={isRunning}
+        attachedImage={attachedImage}
+        onAttachImage={handleAttachImage}
+        onRemoveImage={() => setAttachedImage(null)}
       />
       <div className="flex flex-col gap-4">
         {!isRunning && execution && execution.results.length > 0 && (

@@ -9,6 +9,12 @@ const MIN_OUTPUT_TOKENS = 16;
 /** Teto absoluto por resposta, independente de quanto saldo sobrar — mantém
  * o tamanho das respostas dentro do que faz sentido pra um teste comparativo. */
 const MAX_OUTPUT_TOKENS_CEILING = 4096;
+/** Estimativa fixa de tokens de entrada pra uma imagem anexada — nenhum
+ * provedor exposto pelo OpenRouter devolve a contagem real antes da
+ * chamada, então usamos uma média conservadora entre o "low detail" (~85
+ * tokens) e imagens grandes em detalhe alto (pode passar de 1500) de vários
+ * provedores, pra não deixar o orçamento de saída otimista demais. */
+const IMAGE_INPUT_TOKENS_ESTIMATE = 800;
 
 export interface ModelBudgetPlan {
   modelId: ModelId;
@@ -41,13 +47,16 @@ export async function planExecutionBudget(
   systemPrompt: string,
   userMessage: string,
   creditsAvailable: number,
+  hasImage = false,
 ): Promise<BudgetPlanResult> {
   const availableBRL = creditsToBRL(creditsAvailable);
 
   // O mesmo texto gera a mesma contagem de tokens independente do modelo
   // (tokenizer único desde a migração pro OpenRouter — ver token-counter.ts),
-  // então basta contar uma vez e reaproveitar pra todos.
-  const inputTokens = await countInputTokens(systemPrompt, userMessage);
+  // então basta contar uma vez e reaproveitar pra todos. Imagem soma uma
+  // estimativa fixa por cima (ver IMAGE_INPUT_TOKENS_ESTIMATE).
+  const textInputTokens = await countInputTokens(systemPrompt, userMessage);
+  const inputTokens = textInputTokens + (hasImage ? IMAGE_INPUT_TOKENS_ESTIMATE : 0);
 
   const inputCostsInBRL = modelIds.map(
     (modelId) => (inputTokens / 1000) * MODEL_PRICING[modelId].inputPricePer1k,

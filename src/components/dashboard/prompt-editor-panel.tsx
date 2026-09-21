@@ -1,6 +1,8 @@
 "use client";
 
-import { Loader2, Play } from "lucide-react";
+import { useRef } from "react";
+import { Loader2, Paperclip, Play, X } from "lucide-react";
+import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { ModelId } from "@/types/models";
 import { ModelSelector } from "./model-selector";
+
+export interface AttachedImage {
+  dataUrl: string;
+  name: string;
+}
 
 interface PromptEditorPanelProps {
   promptName: string;
@@ -26,6 +33,12 @@ interface PromptEditorPanelProps {
   maxSelectableModels: number;
   onSubmit: () => void;
   isRunning: boolean;
+  /** Imagem anexada no User message (ver upload de arquivo abaixo) — quando
+   * presente, filtra o seletor de modelos pra só multimodais (ver
+   * ModelSelector). */
+  attachedImage: AttachedImage | null;
+  onAttachImage: (image: AttachedImage) => void;
+  onRemoveImage: () => void;
 }
 
 // Selo de destaque bem maior que o padrão do componente (size-4) pra ficar
@@ -38,6 +51,31 @@ const TRIGGER_ICON_CLASS = "**:data-[slot=accordion-trigger-icon]:size-6";
 const FIELD_CLASS = "border-foreground/20 focus-visible:ring-3 focus-visible:ring-primary/40";
 
 const MIN_MODELS_TO_COMPARE = 2;
+
+/** Teto de imagem antes de virar base64 — ~5MB crus, o mesmo limite
+ * validado de novo em /api/executions (nunca confiar só no front). */
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+/** Teto de arquivo de texto — bem menor, já que o conteúdo é só concatenado
+ * ao userMessage (que tem limite de 20.000 caracteres no back). */
+const MAX_TEXT_FILE_BYTES = 2 * 1024 * 1024;
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
 
 export function PromptEditorPanel({
   promptName,
@@ -55,12 +93,51 @@ export function PromptEditorPanel({
   maxSelectableModels,
   onSubmit,
   isRunning,
+  attachedImage,
+  onAttachImage,
+  onRemoveImage,
 }: PromptEditorPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Comparar exige pelo menos 2 modelos — com 1 só não há o que comparar
   // (ExecutiveSummary/CostProjection já assumiam isso, agora a UI barra
   // antes de gastar crédito rodando uma execução que não gera veredito).
   const hasEnoughModels = selectedModelIds.length >= MIN_MODELS_TO_COMPARE;
   const canSubmit = userMessage.trim().length > 0 && hasEnoughModels && !isRunning;
+
+  async function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // permite selecionar o mesmo arquivo de novo depois
+    if (!file) return;
+
+    if (file.type.startsWith("image/")) {
+      if (file.size > MAX_IMAGE_BYTES) {
+        toast.error("Imagem muito grande (máximo 5MB).");
+        return;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        onAttachImage({ dataUrl, name: file.name });
+      } catch {
+        toast.error("Não foi possível ler a imagem.");
+      }
+      return;
+    }
+
+    // Qualquer outro tipo é tratado como texto — extrai o conteúdo aqui no
+    // front e junta ao User message, em vez de enviar o arquivo em si.
+    if (file.size > MAX_TEXT_FILE_BYTES) {
+      toast.error("Arquivo de texto muito grande (máximo 2MB).");
+      return;
+    }
+    try {
+      const text = await readFileAsText(file);
+      const separator = userMessage.trim() ? "\n\n" : "";
+      onUserMessageChange(`${userMessage}${separator}--- Arquivo: ${file.name} ---\n${text}`);
+    } catch {
+      toast.error("Não foi possível ler o conteúdo do arquivo.");
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,7 +179,28 @@ export function PromptEditorPanel({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="user-message">User message</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="user-message">User message</Label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,.txt,.md,.csv,.json,.log"
+                      className="hidden"
+                      onChange={handleFileSelected}
+                      disabled={isRunning}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isRunning}
+                    >
+                      <Paperclip className="size-3.5" />
+                      Anexar arquivo
+                    </Button>
+                  </div>
                   <Textarea
                     id="user-message"
                     placeholder="Mensagem de teste enviada ao modelo..."
@@ -111,6 +209,32 @@ export function PromptEditorPanel({
                     onChange={(event) => onUserMessageChange(event.target.value)}
                     disabled={isRunning}
                   />
+                  {attachedImage && (
+                    <div className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- preview de uma data URL local, não um asset otimizável. */}
+                      <img
+                        src={attachedImage.dataUrl}
+                        alt={attachedImage.name}
+                        className="size-10 shrink-0 rounded object-cover"
+                      />
+                      <span className="flex-1 truncate text-xs text-muted-foreground">
+                        {attachedImage.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={onRemoveImage}
+                        disabled={isRunning}
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Anexar imagem filtra o seletor pra só modelos multimodais. Arquivo de texto tem
+                    o conteúdo colado direto aqui em cima.
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -151,6 +275,7 @@ export function PromptEditorPanel({
                 allowedModelIds={allowedModelIds}
                 maxSelectable={maxSelectableModels}
                 disabled={isRunning}
+                imageAttached={attachedImage !== null}
               />
             </AccordionContent>
           </AccordionItem>

@@ -32,12 +32,20 @@ export class OpenRouterAdapter extends BaseModelAdapter {
     const client = new OpenAI({ apiKey: input.apiKey, baseURL: "https://openrouter.ai/api/v1" });
     const { forceProvider, disableReasoning } = getModelDefinition(input.modelId);
 
+    const userContent: OpenAI.Chat.Completions.ChatCompletionUserMessageParam["content"] =
+      input.imageDataUrl
+        ? [
+            { type: "text", text: input.userMessage },
+            { type: "image_url", image_url: { url: input.imageDataUrl } },
+          ]
+        : input.userMessage;
+
     const completion = await client.chat.completions.create({
       model: input.modelId,
       max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
       messages: [
         { role: "system", content: input.systemPrompt },
-        { role: "user", content: input.userMessage },
+        { role: "user", content: userContent },
       ],
       ...(forceProvider
         ? { provider: { order: [forceProvider], allow_fallbacks: false } }

@@ -4,6 +4,11 @@ export interface ModelAdapterInput {
   modelId: ModelId;
   systemPrompt: string;
   userMessage: string;
+  /** Imagem anexada no User message, como data URL — vira uma parte extra
+   * de conteúdo multimodal na mensagem do usuário (ver openrouter.adapter.ts).
+   * Só chega aqui quando o modelo suporta imagem (checado em
+   * /api/executions antes de disparar qualquer chamada). */
+  imageDataUrl?: string;
   /** Teto de tokens de saída pra esta chamada específica — calculado por
    * planExecutionBudget (src/lib/ai/budget.ts) a partir do saldo restante
    * do usuário. Cai para MAX_OUTPUT_TOKENS (limits.ts) quando ausente. */

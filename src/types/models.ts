@@ -44,21 +44,46 @@ export interface ModelDefinition {
    * (usuário com pouco saldo) é todo consumido em tokens de raciocínio
    * invisíveis e a resposta visível volta vazia. */
   disableReasoning?: boolean;
+  /** Aceita imagem como entrada (multimodal) — usado pra filtrar o seletor
+   * de modelos quando o usuário anexa uma imagem no teste (ver
+   * ModelSelector e o campo imageDataUrl em /api/executions). As variantes
+   * de texto puro (GPT-OSS, Llama 3.x "instruct" sem sufixo Vision) não
+   * aceitam imagem — só os multimodais oficiais de cada fabricante aceitam. */
+  supportsImages: boolean;
 }
 
 export const MODEL_CATALOG: readonly ModelDefinition[] = [
-  { id: "openai/gpt-4o", provider: "OPENAI", tier: "PREMIUM", label: "GPT-4o" },
-  { id: "openai/gpt-4o-mini", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-4o mini" },
+  { id: "openai/gpt-4o", provider: "OPENAI", tier: "PREMIUM", label: "GPT-4o", supportsImages: true },
+  {
+    id: "openai/gpt-4o-mini",
+    provider: "OPENAI",
+    tier: "COST_EFFECTIVE",
+    label: "GPT-4o mini",
+    supportsImages: true,
+  },
   // reasoning.default_enabled=false (confirmado via GET /api/v1/models) —
   // não precisa de disableReasoning como o DeepSeek V4 Pro.
-  { id: "openai/gpt-5.4", provider: "OPENAI", tier: "PREMIUM", label: "GPT-5.4" },
-  { id: "anthropic/claude-opus-5", provider: "ANTHROPIC", tier: "PREMIUM", label: "Claude Opus 5" },
-  { id: "anthropic/claude-sonnet-5", provider: "ANTHROPIC", tier: "PREMIUM", label: "Claude Sonnet 5" },
+  { id: "openai/gpt-5.4", provider: "OPENAI", tier: "PREMIUM", label: "GPT-5.4", supportsImages: true },
+  {
+    id: "anthropic/claude-opus-5",
+    provider: "ANTHROPIC",
+    tier: "PREMIUM",
+    label: "Claude Opus 5",
+    supportsImages: true,
+  },
+  {
+    id: "anthropic/claude-sonnet-5",
+    provider: "ANTHROPIC",
+    tier: "PREMIUM",
+    label: "Claude Sonnet 5",
+    supportsImages: true,
+  },
   {
     id: "anthropic/claude-haiku-4.5",
     provider: "ANTHROPIC",
     tier: "COST_EFFECTIVE",
     label: "Claude Haiku 4.5",
+    supportsImages: true,
   },
   // Ainda não existe uma "google/gemini-3-pro" estável no OpenRouter — o
   // tier Pro atual é servido como preview (confirmado via GET /api/v1/models).
@@ -67,31 +92,54 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
     provider: "GOOGLE",
     tier: "PREMIUM",
     label: "Gemini Pro",
+    supportsImages: true,
   },
-  { id: "google/gemini-3.5-flash-lite", provider: "GOOGLE", tier: "COST_EFFECTIVE", label: "Gemini Flash Lite" },
+  {
+    id: "google/gemini-3.5-flash-lite",
+    provider: "GOOGLE",
+    tier: "COST_EFFECTIVE",
+    label: "Gemini Flash Lite",
+    supportsImages: true,
+  },
   {
     id: "google/gemini-3.8-flash",
     provider: "GOOGLE",
     tier: "COST_EFFECTIVE",
     label: "Gemini 3.8 Flash",
     promoTag: "O novo Custo-benefício matador",
+    supportsImages: true,
   },
   // GPT-OSS é modelo da própria OpenAI (open-weight), só chamado via
   // OpenRouter — o provedor de inferência real por baixo pode variar (Groq,
   // Cerebras etc.), não afeta a atribuição de fabricante nem o app.
-  { id: "openai/gpt-oss-120b", provider: "OPENAI", tier: "PREMIUM", label: "GPT-OSS 120B" },
-  { id: "openai/gpt-oss-20b", provider: "OPENAI", tier: "COST_EFFECTIVE", label: "GPT-OSS 20B" },
+  // supportsImages: false — a linha "OSS" é só de texto, diferente do GPT-4o.
+  {
+    id: "openai/gpt-oss-120b",
+    provider: "OPENAI",
+    tier: "PREMIUM",
+    label: "GPT-OSS 120B",
+    supportsImages: false,
+  },
+  {
+    id: "openai/gpt-oss-20b",
+    provider: "OPENAI",
+    tier: "COST_EFFECTIVE",
+    label: "GPT-OSS 20B",
+    supportsImages: false,
+  },
   // Llama é da Meta — forceProvider força o roteamento pra rodar na Groq
   // (confirmado via GET /api/v1/models/{id}/endpoints que a Groq serve
   // esses dois; os modelos Llama 4 Maverick/Scout ainda não têm backend
   // Groq no OpenRouter), mas isso é só o backend de inferência, não muda o
-  // fabricante do modelo.
+  // fabricante do modelo. supportsImages: false — só as variantes "Vision"
+  // (não presentes neste catálogo) do Llama aceitam imagem.
   {
     id: "meta-llama/llama-3.3-70b-instruct",
     provider: "META",
     tier: "PREMIUM",
     label: "Llama 3.3 70B",
     forceProvider: "groq",
+    supportsImages: false,
   },
   {
     id: "meta-llama/llama-3.1-8b-instruct",
@@ -99,6 +147,7 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
     tier: "COST_EFFECTIVE",
     label: "Llama 3.1 8B",
     forceProvider: "groq",
+    supportsImages: false,
   },
   // deepseek-v4-pro tem "thinking" habilitado por padrão (reasoning_effort
   // "high") — sem disableReasoning, um orçamento de max_tokens baixo é todo
@@ -110,6 +159,7 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
     tier: "PREMIUM",
     label: "DeepSeek V4 Pro",
     disableReasoning: true,
+    supportsImages: true,
   },
   // v4.1-flash tem "reasoning" ligado por padrão e ignora reasoning.exclude
   // em pelo menos um dos backends (confirmado: consumiu tokens de raciocínio
@@ -120,11 +170,18 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
     provider: "DEEPSEEK",
     tier: "COST_EFFECTIVE",
     label: "DeepSeek V3.2",
+    supportsImages: true,
   },
   // Atenção ao ID: é "3-5" (hífen), não "3.5" — confirmado via GET
   // /api/v1/models (a página de preços da Mistral usa "3.5", mas o slug do
   // OpenRouter não).
-  { id: "mistralai/mistral-medium-3-5", provider: "MISTRAL", tier: "PREMIUM", label: "Mistral Medium 3.5" },
+  {
+    id: "mistralai/mistral-medium-3-5",
+    provider: "MISTRAL",
+    tier: "PREMIUM",
+    label: "Mistral Medium 3.5",
+    supportsImages: true,
+  },
   // mistral-small-2603 ("Mistral Small 4") deu 429 sustentado — rate limit
   // compartilhado do OpenRouter com a Mistral pra esse modelo específico no
   // momento do teste. 3.2-24b é a geração anterior, mas respondeu estável.
@@ -133,6 +190,7 @@ export const MODEL_CATALOG: readonly ModelDefinition[] = [
     provider: "MISTRAL",
     tier: "COST_EFFECTIVE",
     label: "Mistral Small 3.2",
+    supportsImages: true,
   },
 ] as const;
 

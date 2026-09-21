@@ -11,10 +11,15 @@ import { ensureOpenRouterApiKey } from "@/lib/openrouter/client";
 import { checkRule } from "@/lib/ai/rule-checker";
 import { brlToCredits, USD_TO_BRL_RATE } from "@/lib/credits/credit-converter";
 import { getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
-import { MODEL_CATALOG } from "@/types/models";
+import { getModelDefinition, MODEL_CATALOG } from "@/types/models";
 import type { UnifiedModelResponse } from "@/types/models";
 
 const VALID_MODEL_IDS = MODEL_CATALOG.map((model) => model.id) as [string, ...string[]];
+
+// ~5MB de imagem crua vira ~6.98M caracteres em base64 (razão 4/3 do
+// encoding + a URL de dados em si) — teto generoso o bastante pra fotos e
+// screenshots comuns sem deixar o payload da requisição sair de controle.
+const MAX_IMAGE_DATA_URL_LENGTH = 7_000_000;
 
 const runExecutionSchema = z.object({
   promptId: z.string().cuid().optional(),
@@ -27,6 +32,15 @@ const runExecutionSchema = z.object({
   /** Regra opcional em texto livre, verificada em cada resposta por um
    * modelo-juiz (ver src/lib/ai/rule-checker.ts). */
   rule: z.string().trim().max(2000).optional(),
+  /** Imagem anexada no User message, como data URL (ver upload no front —
+   * arquivo de texto já vem embutido em userMessage, só imagem chega aqui).
+   * Só modelos com supportsImages podem ser combinados com isso (checado
+   * abaixo, nunca confiando só no filtro da UI). */
+  imageDataUrl: z
+    .string()
+    .max(MAX_IMAGE_DATA_URL_LENGTH, "Imagem muito grande.")
+    .regex(/^data:image\/(png|jpe?g|webp|gif);base64,/, "Formato de imagem não suportado.")
+    .optional(),
 });
 
 interface JudgedResult extends UnifiedModelResponse {
@@ -77,7 +91,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Payload inválido." }, { status: 400 });
   }
 
-  const { promptId, promptName, systemPrompt, userMessage, modelIds, rule } = parsed.data;
+  const { promptId, promptName, systemPrompt, userMessage, modelIds, rule, imageDataUrl } = parsed.data;
 
   // Contas colaboradoras de um projeto Enterprise (ver User.projectId) não
   // têm plano/créditos/chave OpenRouter próprios — tudo isso resolve pro
@@ -107,6 +121,20 @@ export async function POST(request: Request) {
     );
   }
 
+  // Mesma trava do ModelSelector (esconde/desabilita modelo sem suporte a
+  // imagem quando há anexo) — nunca confiar só no que o cliente manda.
+  if (imageDataUrl) {
+    const imageIncompatibleModelIds = modelIds.filter(
+      (modelId) => !getModelDefinition(modelId).supportsImages,
+    );
+    if (imageIncompatibleModelIds.length > 0) {
+      return NextResponse.json(
+        { error: "Alguns modelos selecionados não aceitam imagem como entrada." },
+        { status: 403 },
+      );
+    }
+  }
+
   const usage = await getUsageSummary(billingOwnerId);
   if (usage.isOverLimit) {
     return NextResponse.json(
@@ -120,7 +148,13 @@ export async function POST(request: Request) {
   // aqui (nenhum dinheiro gasto); caso contrário, o que sobra vira o teto
   // de tokens de saída de cada modelo — na pior das hipóteses a resposta
   // vem cortada no meio, nunca deixando o usuário com saldo negativo.
-  const budgetPlan = await planExecutionBudget(modelIds, systemPrompt, userMessage, usage.creditsAvailable);
+  const budgetPlan = await planExecutionBudget(
+    modelIds,
+    systemPrompt,
+    userMessage,
+    usage.creditsAvailable,
+    Boolean(imageDataUrl),
+  );
   if (!budgetPlan.ok) {
     return NextResponse.json({ error: budgetPlan.reason }, { status: 402 });
   }
@@ -136,6 +170,7 @@ export async function POST(request: Request) {
   const rawResults = await runComparison({
     systemPrompt,
     userMessage,
+    imageDataUrl,
     modelIds,
     budgetPlans: budgetPlan.plans,
     apiKey,

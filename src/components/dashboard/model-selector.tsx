@@ -35,6 +35,9 @@ interface ModelSelectorProps {
    * ao atingir, os checkboxes ainda não marcados ficam desabilitados. */
   maxSelectable: number;
   disabled?: boolean;
+  /** Há uma imagem anexada no User message — desabilita modelos sem
+   * supportsImages (ver types/models.ts) até a imagem ser removida. */
+  imageAttached?: boolean;
 }
 
 export function ModelSelector({
@@ -44,6 +47,7 @@ export function ModelSelector({
   allowedModelIds,
   maxSelectable,
   disabled,
+  imageAttached = false,
 }: ModelSelectorProps) {
   const atSelectionLimit = selectedModelIds.length >= maxSelectable;
 
@@ -75,7 +79,9 @@ export function ModelSelector({
                 const inputId = `model-${model.id}`;
                 const isMostUsed = mostUsedModelIds.includes(model.id);
                 const isSelected = selectedModelIds.includes(model.id);
-                const isCheckboxDisabled = disabled || (!isSelected && atSelectionLimit);
+                const isImageIncompatible = imageAttached && !model.supportsImages;
+                const isCheckboxDisabled =
+                  disabled || (!isSelected && atSelectionLimit) || isImageIncompatible;
                 return (
                   <div
                     key={model.id}
@@ -103,6 +109,11 @@ export function ModelSelector({
                         {model.label}
                         {isMostUsed && (
                           <Star className="size-3 fill-amber-500 text-amber-500" aria-label="Mais usado" />
+                        )}
+                        {isImageIncompatible && (
+                          <span className="text-[10px] font-normal text-muted-foreground">
+                            (sem suporte a imagem)
+                          </span>
                         )}
                       </Label>
                       <Badge variant={model.tier === "PREMIUM" ? "default" : "secondary"}>
