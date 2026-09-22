@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const BASE_NAV_ITEMS = [
   { href: "/app", label: "Dashboard" },
+  { href: "/app/workflows", label: "Workflows" },
   { href: "/app/history", label: "Histórico" },
 ] as const;
 
@@ -18,7 +19,7 @@ export function MainNav({ showProjects = false }: { showProjects?: boolean }) {
   return (
     <nav className="flex items-center gap-1">
       {navItems.map((item) => {
-        const isActive = pathname === item.href;
+        const isActive = pathname === item.href || (item.href !== "/app" && pathname.startsWith(`${item.href}/`));
         return (
           <Link
             key={item.href}

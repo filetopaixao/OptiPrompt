@@ -7,6 +7,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/app/history" }));
 it("marca a rota ativa e mostra Projetos somente quando permitido", () => {
   const { rerender } = render(<MainNav />);
   expect(screen.getByRole("link", { name: "Histórico" })).toHaveClass("bg-secondary");
+  expect(screen.getByRole("link", { name: "Workflows" })).toHaveAttribute("href", "/app/workflows");
   expect(screen.queryByRole("link", { name: "Projetos" })).not.toBeInTheDocument();
   rerender(<MainNav showProjects />);
   expect(screen.getByRole("link", { name: "Projetos" })).toHaveAttribute("href", "/app/projects");

@@ -13,7 +13,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString || typeof connectionString !== "string") {
+    throw new Error(
+      "DATABASE_URL não está configurada. Copie .env.example para .env e informe a conexão PostgreSQL.",
+    );
+  }
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 

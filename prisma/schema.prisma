@@ -66,12 +66,12 @@ enum SubscriptionStatus {
 }
 
 model Plan {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  slug         String   @unique
+  id                      String   @id @default(cuid())
+  name                    String   @unique
+  slug                    String   @unique
   /// Preço da assinatura em centavos. O teto mensal de créditos é derivado
   /// daqui (20% do valor) — ver getMonthlyCreditLimit em credit-converter.ts.
-  priceInCents Int
+  priceInCents            Int
   /// Sobrescreve o teto mensal de créditos calculado a partir do preço —
   /// usado pelo plano "Gratuito" (ver src/lib/plans/trial.ts), que tem
   /// priceInCents 0 mas precisa de um teto próprio (300 créditos). null em
@@ -86,11 +86,11 @@ model Plan {
 }
 
 model User {
-  id           String  @id @default(cuid())
-  email        String  @unique
-  name         String?
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  name               String?
   /// Hash bcrypt — null só para linhas legadas anteriores ao login real.
-  passwordHash String?
+  passwordHash       String?
   /// Senha provisória definida pelo admin (ver admin/usuarios) — força a
   /// troca no próximo acesso antes de liberar qualquer rota de /app.
   mustChangePassword Boolean  @default(false)
@@ -154,8 +154,78 @@ model User {
   executions                Execution[]
   providerCreditAllocations ProviderCreditAllocation[]
   creditPackPurchases       CreditPackPurchase[]
+  workflowProjects          WorkflowProject[]
 
   @@map("users")
+}
+
+/// Projeto visual de automação criado pelo usuário. O grafo é armazenado
+/// como JSON para preservar posições e configurações do React Flow.
+model WorkflowProject {
+  id        String   @id @default(cuid())
+  name      String
+  nodes     Json
+  edges     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runs      WorkflowRun[]
+
+  @@index([userId, updatedAt])
+  @@index([projectId, updatedAt])
+  @@map("workflow_projects")
+}
+
+/// Snapshot de uma execução completa do workflow. Mantém o grafo utilizado
+/// para que o histórico continue reproduzível após edições posteriores.
+model WorkflowRun {
+  id             String    @id @default(cuid())
+  status         String
+  nodesSnapshot  Json
+  edgesSnapshot  Json
+  finalOutput    String?   @db.Text
+  errorMessage   String?   @db.Text
+  totalCredits   Int       @default(0)
+  totalLatencyMs Int       @default(0)
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  workflowId String
+  workflow   WorkflowProject   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  steps      WorkflowStepRun[]
+
+  @@index([workflowId, createdAt])
+  @@map("workflow_runs")
+}
+
+/// Resultado auditável de cada bloco em uma execução.
+model WorkflowStepRun {
+  id                     String   @id @default(cuid())
+  nodeId                 String
+  kind                   String
+  label                  String
+  modelId                String?
+  status                 String
+  inputText              String?  @db.Text
+  outputText             String?  @db.Text
+  errorMessage           String?  @db.Text
+  promptTokens           Int      @default(0)
+  completionTokens       Int      @default(0)
+  latencyMs              Int      @default(0)
+  estimatedCostInCredits Int      @default(0)
+  estimatedCostInBRL     Decimal  @default(0) @db.Decimal(10, 6)
+  position               Int
+  createdAt              DateTime @default(now())
+
+  runId String
+  run   WorkflowRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, position])
+  @@map("workflow_step_runs")
 }
 
 /// Projeto dentro de uma conta Enterprise (ver src/app/app/projects) —
@@ -171,7 +241,8 @@ model Project {
   ownerId String
   owner   User   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
-  members User[]
+  members          User[]
+  workflowProjects WorkflowProject[]
 
   @@index([ownerId])
   @@map("projects")
@@ -232,7 +303,7 @@ model ProviderCreditAllocation {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// event.id do webhook do Stripe que originou esta alocação (idempotência).
-  stripeEventId     String @unique
+  stripeEventId     String         @unique
   amountPaidInCents Int
   provider          CreditProvider
   amountInCents     Int
