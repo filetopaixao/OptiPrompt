@@ -16,7 +16,7 @@ const meta: Record<WorkflowNodeKind, { label: string; icon: typeof Bot; color: s
 export function WorkflowNode({ data, selected }: NodeProps<WorkflowNodeType>) {
   const item = meta[data.kind];
   const Icon = item.icon;
-  return <div className={`w-64 rounded-xl border border-l-4 ${item.color} bg-card p-4 shadow-sm ${selected ? "ring-2 ring-primary/40" : ""}`}>
+  return <div className={`relative w-64 rounded-xl border border-l-4 ${item.color} bg-card p-4 shadow-sm ${selected ? "ring-2 ring-primary/40" : ""}`}>
     {data.kind !== "input" && <Handle type="target" position={Position.Left} />}
     <div className="mb-3 flex items-center justify-between"><Icon className="size-4" /><Badge variant="outline">{item.label}</Badge></div>
     <strong className="text-sm">{data.label}</strong>
