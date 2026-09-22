@@ -62,14 +62,14 @@ export function VersionComparePanel({
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold">System prompt</h3>
+        <h3 className="text-sm font-semibold">Instruções do Sistema (Prompt)</h3>
         <div className="rounded-md border bg-muted/30 p-3">
           <PromptDiff before={executionA.systemPrompt} after={executionB.systemPrompt} />
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold">User message</h3>
+        <h3 className="text-sm font-semibold">Mensagem do Usuário</h3>
         <div className="rounded-md border bg-muted/30 p-3">
           <PromptDiff before={executionA.userMessage} after={executionB.userMessage} />
         </div>

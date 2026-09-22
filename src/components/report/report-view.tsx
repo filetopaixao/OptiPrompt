@@ -59,13 +59,13 @@ export function ReportView({
           Prompt testado
         </h2>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">System prompt</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Instruções do Sistema (Prompt)</p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed">
             {execution.systemPrompt || "(vazio)"}
           </p>
         </div>
         <div className="rounded-lg border bg-muted/30 p-4">
-          <p className="mb-1 text-xs font-medium text-muted-foreground">User message</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Mensagem do Usuário</p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{execution.userMessage}</p>
         </div>
         {execution.rule && (

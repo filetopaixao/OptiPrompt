@@ -77,6 +77,29 @@ function readFileAsText(file: File): Promise<string> {
   });
 }
 
+function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+/** .docx é um zip com XML por dentro — dá pra extrair o texto todo no
+ * próprio navegador (import sob demanda: só quem realmente anexa um .docx
+ * paga o custo do pacote). .doc (o formato binário antigo, pré-2007) não
+ * tem parser client-side viável — precisaria de um conversor no servidor
+ * (LibreOffice headless ou equivalente), fora do escopo aqui. */
+async function extractDocxText(file: File): Promise<string> {
+  const mammoth = await import("mammoth");
+  const arrayBuffer = await readFileAsArrayBuffer(file);
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
+
 export function PromptEditorPanel({
   promptName,
   onPromptNameChange,
@@ -124,14 +147,26 @@ export function PromptEditorPanel({
       return;
     }
 
-    // Qualquer outro tipo é tratado como texto — extrai o conteúdo aqui no
-    // front e junta ao User message, em vez de enviar o arquivo em si.
-    if (file.size > MAX_TEXT_FILE_BYTES) {
-      toast.error("Arquivo de texto muito grande (máximo 2MB).");
+    if (file.name.toLowerCase().endsWith(".doc") && !file.name.toLowerCase().endsWith(".docx")) {
+      toast.error(
+        "Arquivo .doc (formato antigo do Word) não é suportado — salve como .docx e tente de novo.",
+      );
       return;
     }
+
+    if (file.size > MAX_TEXT_FILE_BYTES) {
+      toast.error("Arquivo muito grande (máximo 2MB).");
+      return;
+    }
+
+    const isDocx =
+      file.type === DOCX_MIME || file.name.toLowerCase().endsWith(".docx");
+
     try {
-      const text = await readFileAsText(file);
+      // .docx precisa de um parser (mammoth); qualquer outro tipo (.txt,
+      // .md, .csv, .json, .log) é lido como texto puro. O conteúdo é
+      // colado direto no User message em vez de enviar o arquivo em si.
+      const text = isDocx ? await extractDocxText(file) : await readFileAsText(file);
       const separator = userMessage.trim() ? "\n\n" : "";
       onUserMessageChange(`${userMessage}${separator}--- Arquivo: ${file.name} ---\n${text}`);
     } catch {
@@ -167,7 +202,7 @@ export function PromptEditorPanel({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="system-prompt">System prompt</Label>
+                  <Label htmlFor="system-prompt">Instruções do Sistema (Prompt)</Label>
                   <Textarea
                     id="system-prompt"
                     placeholder="Você é um assistente especializado em..."
@@ -180,11 +215,11 @@ export function PromptEditorPanel({
 
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="user-message">User message</Label>
+                    <Label htmlFor="user-message">Mensagem do Usuário</Label>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*,.txt,.md,.csv,.json,.log"
+                      accept="image/*,.txt,.md,.csv,.json,.log,.docx"
                       className="hidden"
                       onChange={handleFileSelected}
                       disabled={isRunning}
@@ -232,8 +267,8 @@ export function PromptEditorPanel({
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Anexar imagem filtra o seletor pra só modelos multimodais. Arquivo de texto tem
-                    o conteúdo colado direto aqui em cima.
+                    Anexar imagem filtra o seletor pra só modelos multimodais. Arquivo de texto ou
+                    .docx tem o conteúdo colado direto aqui em cima (.doc antigo não é suportado).
                   </p>
                 </div>
 

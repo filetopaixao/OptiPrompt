@@ -87,7 +87,7 @@ export function ExecutionRow({
           )}
         </div>
         <p className="line-clamp-1 text-xs text-muted-foreground">
-          {execution.userMessage || "(sem user message)"}
+          {execution.userMessage || "(sem mensagem do usuário)"}
         </p>
       </Label>
       <div className="flex shrink-0 items-center gap-4 text-xs text-muted-foreground">
