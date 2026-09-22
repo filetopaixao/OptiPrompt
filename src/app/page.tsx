@@ -71,9 +71,9 @@ export default async function AgenciasPage({
       <main className="flex-1">
         <LandingHero />
         <LandingBenefits />
+        <LandingComparison />
         <LandingPricing plans={plans} />
         <LandingModelProviders />
-        <LandingComparison />
         <LandingFAQ />
       </main>
       <LandingFooter />
