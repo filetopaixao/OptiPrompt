@@ -38,50 +38,53 @@ const COMPARISON_ROWS: { question: string; promptfoo: string; otimizaia: string 
 
 export function LandingComparison() {
   return (
-    <section id="promptfoo" className="mx-auto max-w-4xl scroll-mt-16 px-4 py-16 sm:px-6">
-      <div className="mb-10 text-center">
-        <h2 className="text-3xl font-semibold tracking-tight">OtimizaIA vs PromptFoo</h2>
-        <p className="mt-2 text-muted-foreground">
-          A alternativa ao PromptFoo com interface gráfica, sem YAML e sem precisar programar —
-          veja a diferença lado a lado.
+    <section id="promptfoo" className="scroll-mt-16 border-y bg-muted/40">
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight">OtimizaIA vs PromptFoo</h2>
+          <p className="mt-2 text-muted-foreground">
+            A alternativa ao PromptFoo com interface gráfica, sem YAML e sem precisar programar —
+            veja a diferença lado a lado.
+          </p>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border bg-background">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-muted/50 text-left">
+                <th className="p-4 font-semibold">&nbsp;</th>
+                <th className="p-4 font-semibold">PromptFoo</th>
+                <th className="p-4 font-semibold text-primary">OtimizaIA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON_ROWS.map((row, index) => (
+                <tr key={row.question} className={index % 2 === 1 ? "bg-muted/20" : undefined}>
+                  <td className="border-t p-4 font-medium">{row.question}</td>
+                  <td className="border-t p-4 text-muted-foreground">
+                    <span className="flex items-start gap-2">
+                      <X className="mt-0.5 size-4 shrink-0 text-rose-500" />
+                      {row.promptfoo}
+                    </span>
+                  </td>
+                  <td className="border-t p-4">
+                    <span className="flex items-start gap-2">
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      {row.otimizaia}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          O PromptFoo é uma ferramenta open-source excelente pra quem já programa e quer rodar
+          testes via CLI. O OtimizaIA existe pra quem quer o mesmo tipo de comparação sem escrever
+          código.
         </p>
       </div>
-
-      <div className="overflow-hidden rounded-xl border">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-muted/50 text-left">
-              <th className="p-4 font-semibold">&nbsp;</th>
-              <th className="p-4 font-semibold">PromptFoo</th>
-              <th className="p-4 font-semibold text-primary">OtimizaIA</th>
-            </tr>
-          </thead>
-          <tbody>
-            {COMPARISON_ROWS.map((row, index) => (
-              <tr key={row.question} className={index % 2 === 1 ? "bg-muted/20" : undefined}>
-                <td className="border-t p-4 font-medium">{row.question}</td>
-                <td className="border-t p-4 text-muted-foreground">
-                  <span className="flex items-start gap-2">
-                    <X className="mt-0.5 size-4 shrink-0 text-rose-500" />
-                    {row.promptfoo}
-                  </span>
-                </td>
-                <td className="border-t p-4">
-                  <span className="flex items-start gap-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    {row.otimizaia}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        O PromptFoo é uma ferramenta open-source excelente pra quem já programa e quer rodar testes
-        via CLI. O OtimizaIA existe pra quem quer o mesmo tipo de comparação sem escrever código.
-      </p>
     </section>
   );
 }
