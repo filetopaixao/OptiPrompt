@@ -100,6 +100,36 @@ async function extractDocxText(file: File): Promise<string> {
   return result.value;
 }
 
+/** PDF.js — "webpack.mjs" é o entry point oficial do próprio pacote pra uso
+ * com bundler (ver node_modules/pdfjs-dist/webpack.mjs): já configura o
+ * worker via `new Worker(new URL(...))`, o mesmo padrão de asset que o
+ * Next.js/Turbopack sabe empacotar sozinho, sem precisar copiar o arquivo
+ * do worker pra public/ nem apontar pra um CDN externo. */
+async function extractPdfText(file: File): Promise<string> {
+  const pdfjsLib = await import("pdfjs-dist/webpack.mjs");
+  const arrayBuffer = await readFileAsArrayBuffer(file);
+  // Sem isso, o pdf.js não consegue medir glifos de fontes padrão não
+  // embutidas no PDF (Helvetica, Times etc.) e trunca o texto no meio —
+  // confirmado num PDF de teste real. Os arquivos ficam vendorizados em
+  // public/pdfjs/standard_fonts (copiados de node_modules/pdfjs-dist),
+  // servidos como assets estáticos.
+  const pdf = await pdfjsLib.getDocument({
+    data: arrayBuffer,
+    standardFontDataUrl: "/pdfjs/standard_fonts/",
+  }).promise;
+
+  const pageTexts: string[] = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item) => ("str" in item ? item.str : ""))
+      .join(" ");
+    pageTexts.push(pageText);
+  }
+  return pageTexts.join("\n\n");
+}
+
 export function PromptEditorPanel({
   promptName,
   onPromptNameChange,
@@ -159,14 +189,19 @@ export function PromptEditorPanel({
       return;
     }
 
-    const isDocx =
-      file.type === DOCX_MIME || file.name.toLowerCase().endsWith(".docx");
+    const isDocx = file.type === DOCX_MIME || file.name.toLowerCase().endsWith(".docx");
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
     try {
-      // .docx precisa de um parser (mammoth); qualquer outro tipo (.txt,
-      // .md, .csv, .json, .log) é lido como texto puro. O conteúdo é
-      // colado direto no User message em vez de enviar o arquivo em si.
-      const text = isDocx ? await extractDocxText(file) : await readFileAsText(file);
+      // .docx e .pdf precisam de parser (mammoth / pdf.js); qualquer outro
+      // tipo (.txt, .md, .csv, .json, .log) é lido como texto puro. O
+      // conteúdo é colado direto no User message em vez de enviar o
+      // arquivo em si.
+      const text = isDocx
+        ? await extractDocxText(file)
+        : isPdf
+          ? await extractPdfText(file)
+          : await readFileAsText(file);
       const separator = userMessage.trim() ? "\n\n" : "";
       onUserMessageChange(`${userMessage}${separator}--- Arquivo: ${file.name} ---\n${text}`);
     } catch {
@@ -219,7 +254,7 @@ export function PromptEditorPanel({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*,.txt,.md,.csv,.json,.log,.docx"
+                      accept="image/*,.txt,.md,.csv,.json,.log,.docx,.pdf"
                       className="hidden"
                       onChange={handleFileSelected}
                       disabled={isRunning}
@@ -267,8 +302,9 @@ export function PromptEditorPanel({
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Anexar imagem filtra o seletor pra só modelos multimodais. Arquivo de texto ou
-                    .docx tem o conteúdo colado direto aqui em cima (.doc antigo não é suportado).
+                    Anexar imagem filtra o seletor pra só modelos multimodais. Arquivo de texto,
+                    .docx ou .pdf tem o conteúdo colado direto aqui em cima (.doc antigo não é
+                    suportado).
                   </p>
                 </div>
 
