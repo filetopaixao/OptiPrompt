@@ -31,7 +31,7 @@ const COMPARISON_ROWS: { question: string; promptfoo: string; otimizaia: string 
   },
   {
     question: "Relatório pronto pra apresentar ao cliente final?",
-    promptfoo: "Não — os resultados ficam no terminal/JSON",
+    promptfoo: "Não — tem visualizador web local, mas sem PDF, sem marca própria, e sem compartilhar fora de quem rodou o comando.",
     otimizaia: "Sim — PDF exportável, com sua marca no plano Enterprise",
   },
 ];
