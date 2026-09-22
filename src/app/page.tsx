@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { listPlans } from "@/lib/plans";
 import { LandingBenefits } from "@/components/landing/landing-benefits";
+import { LandingComparison } from "@/components/landing/landing-comparison";
 import { LandingFAQ } from "@/components/landing/landing-faq";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHero } from "@/components/landing/landing-hero";
@@ -72,6 +73,7 @@ export default async function AgenciasPage({
         <LandingBenefits />
         <LandingPricing plans={plans} />
         <LandingModelProviders />
+        <LandingComparison />
         <LandingFAQ />
       </main>
       <LandingFooter />
