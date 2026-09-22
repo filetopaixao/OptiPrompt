@@ -18,8 +18,34 @@ import { WorkflowNode } from "./workflow-node";
 
 const nodeTypes: NodeTypes = { input: WorkflowNode, llm: WorkflowNode, transform: WorkflowNode, output: WorkflowNode };
 const palette = [
-  { kind: "input" as const, label: "Entrada", icon: LogIn }, { kind: "llm" as const, label: "Agente", icon: Bot },
-  { kind: "transform" as const, label: "Transformar", icon: Braces }, { kind: "output" as const, label: "Saída", icon: LogOut },
+  {
+    kind: "input" as const,
+    label: "Entrada",
+    icon: LogIn,
+    description: "Define o conteúdo que inicia o workflow.",
+    example: "Ex.: briefing, pergunta do cliente ou texto de um documento.",
+  },
+  {
+    kind: "llm" as const,
+    label: "Agente",
+    icon: Bot,
+    description: "Envia a entrada para um modelo de IA com uma instrução.",
+    example: "Ex.: analisar o briefing e criar três propostas de campanha.",
+  },
+  {
+    kind: "transform" as const,
+    label: "Transformar",
+    icon: Braces,
+    description: "Formata a resposta anterior sem consumir créditos de IA.",
+    example: "Ex.: converter para JSON, maiúsculas ou minúsculas.",
+  },
+  {
+    kind: "output" as const,
+    label: "Saída",
+    icon: LogOut,
+    description: "Reúne e apresenta o resultado final do workflow.",
+    example: "Ex.: resposta final combinada de dois ou mais agentes.",
+  },
 ];
 
 export function WorkflowEditor({ initialWorkflow, allowedModelIds, testedModelIds }: { initialWorkflow: WorkflowProjectDTO; allowedModelIds: ModelId[]; testedModelIds: ModelId[] }) {
@@ -31,6 +57,7 @@ export function WorkflowEditor({ initialWorkflow, allowedModelIds, testedModelId
   const [saving, setSaving] = useState(false); const [running, setRunning] = useState(false); const [historyOpen, setHistoryOpen] = useState(false);
   const { applyUsage } = useUsageContext(); const router = useRouter(); const testedModels = new Set(testedModelIds);
   const selected = nodes.find((node) => node.id === selectedId);
+  const selectedHelp = selected ? palette.find((item) => item.kind === selected.data.kind) : undefined;
   const onNodesChange = useCallback((changes: NodeChange<AppNode>[]) => setNodes((current) => applyNodeChanges(changes, current)), []);
   const onEdgesChange = useCallback((changes: EdgeChange[]) => setEdges((current) => applyEdgeChanges(changes, current)), []);
   const onConnect = useCallback((connection: Connection) => setEdges((current) => addEdge({ ...connection, animated: true }, current)), []);
@@ -63,9 +90,9 @@ export function WorkflowEditor({ initialWorkflow, allowedModelIds, testedModelId
       <div className="ml-auto flex gap-2"><Button variant="destructive" onClick={remove}><Trash2 />Excluir workflow</Button><Button variant="outline" aria-pressed={historyOpen} onClick={() => setHistoryOpen((value) => !value)}><History />{historyOpen ? "Ocultar histórico" : "Histórico"}</Button><Button variant="outline" onClick={() => save()} disabled={saving || running}>{saving ? <Loader2 className="animate-spin" /> : <Save />}Salvar</Button><Button onClick={run} disabled={running || saving}>{running ? <Loader2 className="animate-spin" /> : <Play />}Executar</Button></div>
     </header>
     <div className={`grid min-h-0 flex-1 ${historyOpen ? "grid-cols-[180px_minmax(0,1fr)_300px_320px]" : "grid-cols-[180px_minmax(0,1fr)_300px]"}`}>
-      <aside className="border-r bg-background p-3"><p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Blocos</p><div className="space-y-2">{palette.map(({ kind, label, icon: Icon }) => <Button key={kind} variant="outline" className="w-full justify-start" onClick={() => addNode(kind)}><Plus className="size-3" /><Icon />{label}</Button>)}</div></aside>
+      <aside className="overflow-y-auto border-r bg-background p-3"><p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Blocos</p><div className="space-y-2">{palette.map(({ kind, label, icon: Icon, description, example }) => <button type="button" key={kind} className="w-full rounded-lg border bg-background p-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40" onClick={() => addNode(kind)}><span className="flex items-center gap-2 text-sm font-medium"><span className="rounded-md bg-primary/10 p-1.5 text-primary"><Icon className="size-4" /></span>{label}<Plus className="ml-auto size-3.5 text-muted-foreground" /></span><span className="mt-2 block text-xs leading-relaxed text-muted-foreground">{description}</span><span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground/80">{example}</span></button>)}</div></aside>
       <section className="min-w-0"><ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onNodeClick={(_, node) => setSelectedId(node.id)} onPaneClick={() => setSelectedId(null)} fitView><Background /><Controls /><MiniMap /></ReactFlow></section>
-      <aside className="overflow-y-auto border-l bg-background p-4">{selected ? <div className="space-y-4"><div className="flex items-center justify-between"><h2 className="font-semibold">Configurar bloco</h2><Button variant="ghost" size="icon-sm" aria-label="Excluir bloco" title="Excluir bloco" onClick={() => { setNodes((current) => current.filter((node) => node.id !== selected.id)); setEdges((current) => current.filter((edge) => edge.source !== selected.id && edge.target !== selected.id)); setSelectedId(null); }}><Trash2 /></Button></div><div><Label>Nome</Label><Input value={selected.data.label} onChange={(e) => updateSelected({ label: e.target.value })} /></div><div><Label>Descrição</Label><Input value={selected.data.description} onChange={(e) => updateSelected({ description: e.target.value })} /></div>{selected.data.kind === "llm" && <div><Label>Modelo</Label><p className="mb-1 text-xs text-muted-foreground">Modelos já testados aparecem primeiro.</p><select className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={selected.data.modelId} onChange={(e) => updateSelected({ modelId: e.target.value as ModelId })}>{allowedModelIds.map((id) => <option key={id} value={id}>{MODEL_CATALOG.find((model) => model.id === id)?.label}{testedModels.has(id) ? " · testado" : ""}</option>)}</select></div>}{selected.data.kind !== "output" && <div><Label>{selected.data.kind === "input" ? "Conteúdo" : "Instrução"}</Label><Textarea rows={8} value={selected.data.prompt} onChange={(e) => updateSelected({ prompt: e.target.value })} /></div>}{selected.data.result && <div><Label>Último resultado</Label><pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{selected.data.result}</pre></div>}</div> : <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground"><Bot className="mb-3 size-8" /><p>Selecione um bloco para configurá-lo.</p></div>}</aside>
+      <aside className="overflow-y-auto border-l bg-background p-4">{selected ? <div className="space-y-4"><div className="flex items-center justify-between"><h2 className="font-semibold">Configurar bloco</h2><Button variant="ghost" size="icon-sm" aria-label="Excluir bloco" title="Excluir bloco" onClick={() => { setNodes((current) => current.filter((node) => node.id !== selected.id)); setEdges((current) => current.filter((edge) => edge.source !== selected.id && edge.target !== selected.id)); setSelectedId(null); }}><Trash2 /></Button></div>{selectedHelp && <div className="rounded-lg border bg-muted/40 p-3"><p className="text-xs font-medium">Como usar este bloco</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{selectedHelp.description}</p><p className="mt-2 text-xs italic text-muted-foreground">{selectedHelp.example}</p>{selected.data.kind === "transform" && <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">Operações aceitas: escreva “JSON”, “maiúsculas” ou “minúsculas” na instrução.</p>}</div>}<div><Label>Nome</Label><Input value={selected.data.label} onChange={(e) => updateSelected({ label: e.target.value })} /></div><div><Label>Descrição</Label><Input value={selected.data.description} onChange={(e) => updateSelected({ description: e.target.value })} /></div>{selected.data.kind === "llm" && <div><Label>Modelo</Label><p className="mb-1 text-xs text-muted-foreground">Modelos já testados aparecem primeiro.</p><select className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={selected.data.modelId} onChange={(e) => updateSelected({ modelId: e.target.value as ModelId })}>{allowedModelIds.map((id) => <option key={id} value={id}>{MODEL_CATALOG.find((model) => model.id === id)?.label}{testedModels.has(id) ? " · testado" : ""}</option>)}</select></div>}{selected.data.kind !== "output" && <div><Label>{selected.data.kind === "input" ? "Conteúdo" : "Instrução"}</Label><Textarea rows={8} placeholder={selectedHelp?.example.replace("Ex.: ", "")} value={selected.data.prompt} onChange={(e) => updateSelected({ prompt: e.target.value })} /></div>}{selected.data.result && <div><Label>Último resultado</Label><pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{selected.data.result}</pre></div>}</div> : <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground"><Bot className="mb-3 size-8" /><p>Selecione um bloco para configurá-lo.</p></div>}</aside>
       {historyOpen && <aside className="overflow-y-auto border-l bg-background p-4"><h2 className="mb-4 font-semibold">Histórico de execuções</h2>{runs.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma execução ainda.</p> : <div className="space-y-3">{runs.map((run) => <details key={run.id} className="rounded-lg border p-3"><summary className="cursor-pointer text-sm font-medium">{new Date(run.createdAt).toLocaleString("pt-BR")} · {run.status === "SUCCESS" ? "Concluído" : "Erro"}</summary><div className="mt-3 space-y-2 text-xs"><p>{run.totalCredits} créditos · {(run.totalLatencyMs / 1000).toFixed(1)}s</p>{run.steps.map((step) => <div key={step.id} className="rounded bg-muted p-2"><strong>{step.label}</strong>{step.modelId && <p>{MODEL_CATALOG.find((model) => model.id === step.modelId)?.label ?? step.modelId}</p>}<pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap">{step.outputText ?? step.errorMessage}</pre></div>)}</div></details>)}</div>}</aside>}
     </div>
   </div>;
