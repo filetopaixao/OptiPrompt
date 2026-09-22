@@ -6,6 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ExecutionDTO } from "@/types/execution";
 import { ExecutionRow } from "./execution-row";
+import { ModelReliabilityPanel } from "./model-reliability-panel";
 import { VersionCompareDialog } from "./version-compare-dialog";
 
 export function HistoryExplorer({
@@ -95,6 +96,8 @@ export function HistoryExplorer({
           </Tooltip>
         )}
       </div>
+
+      <ModelReliabilityPanel executions={executions} />
 
       <div className="flex flex-col gap-2">
         {executions.map((execution) => (

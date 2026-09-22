@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Tooltip, XAxis, YAxis } from "recharts";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,25 @@ import {
 } from "@/lib/executions/insights";
 import { getModelDefinition } from "@/types/models";
 import type { ExecutionResultDTO } from "@/types/execution";
+
+/** Selo compacto de veredito da regra pra colocar ao lado do custo/latência
+ * nas tabelas — mesma semântica do badge dos cards de resultado, mas sem
+ * texto, já que aqui a coluna "Modelo" ao lado já identifica de quem é. */
+function RuleVerdictCell({ ruleVerdict }: { ruleVerdict: ExecutionResultDTO["ruleVerdict"] }) {
+  if (!ruleVerdict) return <span className="text-muted-foreground">—</span>;
+
+  return ruleVerdict === "PASSED" ? (
+    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+      <CheckCircle2 className="size-3.5" />
+      Passou
+    </span>
+  ) : (
+    <span className="flex items-center gap-1 text-destructive">
+      <XCircle className="size-3.5" />
+      Falhou
+    </span>
+  );
+}
 
 const DEFAULT_REQUESTS_PER_MONTH = 10_000;
 
@@ -67,6 +87,7 @@ export function CostProjection({
       modelId: getModelDefinition(row.modelId).label,
       latencyMs: row.latencyMs,
     }));
+    const hasRuleData = latencyRows.some((row) => row.ruleVerdict !== null);
 
     return (
       <Card>
@@ -108,6 +129,7 @@ export function CostProjection({
                 <tr>
                   <th className="px-3 py-2 text-left font-medium">Modelo</th>
                   <th className="px-3 py-2 text-left font-medium">Latência média</th>
+                  {hasRuleData && <th className="px-3 py-2 text-left font-medium">Regra</th>}
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -118,6 +140,11 @@ export function CostProjection({
                   >
                     <td className="px-3 py-2 font-medium">{getModelDefinition(row.modelId).label}</td>
                     <td className="px-3 py-2">{row.latencyMs}ms</td>
+                    {hasRuleData && (
+                      <td className="px-3 py-2">
+                        <RuleVerdictCell ruleVerdict={row.ruleVerdict} />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -138,6 +165,7 @@ export function CostProjection({
   const cheapest = costRows[0];
   const mostExpensive = costRows[costRows.length - 1];
   const savings = mostExpensive.monthlyCostBRL - cheapest.monthlyCostBRL;
+  const hasRuleData = costRows.some((row) => row.ruleVerdict !== null);
 
   return (
     <Card>
@@ -197,6 +225,7 @@ export function CostProjection({
                 <th className="px-3 py-2 text-left font-medium">Modelo</th>
                 <th className="px-3 py-2 text-left font-medium">Custo/requisição</th>
                 <th className="px-3 py-2 text-left font-medium">Custo/mês projetado</th>
+                {hasRuleData && <th className="px-3 py-2 text-left font-medium">Regra</th>}
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -208,6 +237,11 @@ export function CostProjection({
                   <td className="px-3 py-2 font-medium">{getModelDefinition(row.modelId).label}</td>
                   <td className="px-3 py-2">{formatBRLPrecise(row.costPerRequestBRL)}</td>
                   <td className="px-3 py-2 font-medium">{formatBRL(row.monthlyCostBRL)}</td>
+                  {hasRuleData && (
+                    <td className="px-3 py-2">
+                      <RuleVerdictCell ruleVerdict={row.ruleVerdict} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

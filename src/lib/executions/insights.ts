@@ -1,5 +1,7 @@
 import type { ExecutionResultDTO } from "@/types/execution";
 
+type RuleVerdict = ExecutionResultDTO["ruleVerdict"];
+
 export type ComparisonPriority = "speed" | "price";
 
 export interface WinnerInsight {
@@ -41,6 +43,7 @@ export function computeWinner(
 export interface LatencyRow {
   modelId: string;
   latencyMs: number;
+  ruleVerdict: RuleVerdict;
 }
 
 /** Ordena os resultados bem-sucedidos por latência (mais rápido primeiro) —
@@ -48,7 +51,7 @@ export interface LatencyRow {
 export function buildLatencyComparison(results: ExecutionResultDTO[]): LatencyRow[] {
   return results
     .filter((r) => r.status === "SUCCESS")
-    .map((r) => ({ modelId: r.modelId, latencyMs: r.latencyMs }))
+    .map((r) => ({ modelId: r.modelId, latencyMs: r.latencyMs, ruleVerdict: r.ruleVerdict }))
     .sort((a, b) => a.latencyMs - b.latencyMs);
 }
 
@@ -56,6 +59,7 @@ export interface CostProjectionRow {
   modelId: string;
   costPerRequestBRL: number;
   monthlyCostBRL: number;
+  ruleVerdict: RuleVerdict;
 }
 
 /** Projeta o custo mensal de cada modelo bem-sucedido para um volume de
@@ -70,6 +74,7 @@ export function projectMonthlyCost(
       modelId: r.modelId,
       costPerRequestBRL: r.estimatedCostInBRL,
       monthlyCostBRL: r.estimatedCostInBRL * requestsPerMonth,
+      ruleVerdict: r.ruleVerdict,
     }))
     .sort((a, b) => a.monthlyCostBRL - b.monthlyCostBRL);
 }
