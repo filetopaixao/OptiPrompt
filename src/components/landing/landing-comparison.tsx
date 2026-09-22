@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { AlertTriangle, Check, X } from "lucide-react";
 
 /**
  * Tabela objetiva OtimizaIA x PromptFoo — pensada pra capturar buscas
@@ -8,7 +8,17 @@ import { Check, X } from "lucide-react";
  * (ferramenta open-source de linha de comando, sem billing nem relatório
  * white-label prontos) — não é opinião nem depoimento fabricado.
  */
-const COMPARISON_ROWS: { question: string; promptfoo: string; otimizaia: string }[] = [
+interface ComparisonRow {
+  question: string;
+  promptfoo: string;
+  otimizaia: string;
+  /** "warning" pinta o lado do PromptFoo com o ícone de alerta em vez do X
+   * padrão — usado pro conflito de interesse da aquisição pela OpenAI, que
+   * é mais um "cuidado" do que uma feature simplesmente ausente. */
+  promptfooSeverity?: "warning";
+}
+
+const COMPARISON_ROWS: ComparisonRow[] = [
   {
     question: "Precisa saber programar?",
     promptfoo: "Sim — configura tudo em YAML e roda por linha de comando",
@@ -33,6 +43,13 @@ const COMPARISON_ROWS: { question: string; promptfoo: string; otimizaia: string 
     question: "Relatório pronto pra apresentar ao cliente final?",
     promptfoo: "Não — tem visualizador web local, mas sem PDF, sem marca própria, e sem compartilhar fora de quem rodou o comando.",
     otimizaia: "Sim — PDF exportável, com sua marca no plano Enterprise",
+  },
+  {
+    question: "É independente dos provedores que compara?",
+    promptfoo:
+      "Desde 2026, pertence à OpenAI — levanta dúvida sobre neutralidade ao comparar modelos de concorrentes (Claude, Gemini)",
+    otimizaia: "Não somos donos de nenhum modelo — comparação 100% neutra entre todos os provedores",
+    promptfooSeverity: "warning",
   },
 ];
 
@@ -63,7 +80,11 @@ export function LandingComparison() {
                   <td className="border-t p-4 font-medium">{row.question}</td>
                   <td className="border-t p-4 text-muted-foreground">
                     <span className="flex items-start gap-2">
-                      <X className="mt-0.5 size-4 shrink-0 text-rose-500" />
+                      {row.promptfooSeverity === "warning" ? (
+                        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+                      ) : (
+                        <X className="mt-0.5 size-4 shrink-0 text-rose-500" />
+                      )}
                       {row.promptfoo}
                     </span>
                   </td>
