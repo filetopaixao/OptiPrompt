@@ -38,6 +38,36 @@ async function main() {
     create: { name: "Gratuito", slug: "gratuito", priceInCents: 0, fixedMonthlyCreditLimit: 300 },
   });
 
+  // Plano "Free" — autoatendimento, perpétuo, atribuído automaticamente no
+  // cadastro (ver src/lib/plans/free-tier.ts). Diferente do "Gratuito"
+  // acima: não expira, mas trava em 1 execução/dia via
+  // User.freeExecutionUsedAt, não pelo teto de créditos. O teto de créditos
+  // aqui é só uma trava de segurança de fundo (bem acima do gasto real
+  // possível em 1 execução/dia com até 3 modelos baratos).
+  await prisma.plan.upsert({
+    where: { slug: "free" },
+    update: { name: "Free", priceInCents: 0, fixedMonthlyCreditLimit: 3000 },
+    create: { name: "Free", slug: "free", priceInCents: 0, fixedMonthlyCreditLimit: 3000 },
+  });
+
+  // Lista padrão do plano Free — 1 modelo custo-benefício por provedor
+  // diferente (ver src/lib/plans/free-tier.ts), configurável depois em
+  // /admin/modelos sem precisar de deploy.
+  const DEFAULT_FREE_TIER_MODEL_IDS = [
+    "openai/gpt-4o-mini",
+    "anthropic/claude-haiku-4.5",
+    "google/gemini-3.5-flash-lite",
+    "deepseek/deepseek-v3.2",
+    "mistralai/mistral-small-3.2-24b-instruct",
+  ];
+  for (const [index, modelId] of DEFAULT_FREE_TIER_MODEL_IDS.entries()) {
+    await prisma.freeTierModel.upsert({
+      where: { modelId },
+      update: {},
+      create: { modelId, active: true, sortOrder: index },
+    });
+  }
+
   await prisma.user.upsert({
     where: { email: "demo@optiprompt.dev" },
     update: { subscriptionStatus: "ACTIVE", creditsUsedThisCycle: 18_000 },

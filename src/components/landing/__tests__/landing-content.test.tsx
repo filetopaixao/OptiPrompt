@@ -4,11 +4,11 @@ import { LandingBenefits } from "../landing-benefits";
 import { LandingFooter } from "../landing-footer";
 
 describe("conteúdo institucional", () => {
-  it("expõe os três benefícios centrais", () => {
+  it("expõe os diferenciais centrais", () => {
     render(<LandingBenefits />);
-    expect(screen.getByText("Custo Transparente por Chamada e Modelo")).toBeInTheDocument();
-    expect(screen.getByText("Latência e Tempo de Resposta")).toBeInTheDocument();
-    expect(screen.getByText("Teste A/B de Prompts em Produção")).toBeInTheDocument();
+    expect(screen.getByText("Sem administrar chaves de vários provedores")).toBeInTheDocument();
+    expect(screen.getByText("Benchmarks persistentes")).toBeInTheDocument();
+    expect(screen.getByText("Projetos isolados por cliente")).toBeInTheDocument();
   });
 
   it("oferece um contato externo seguro", () => {

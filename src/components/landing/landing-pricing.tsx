@@ -97,6 +97,36 @@ export function LandingPricing({ plans }: { plans: PlanSummary[] }) {
         escolhidos (modelos premium como GPT-4o e Claude Sonnet 5 consomem mais créditos por
         execução).
       </p>
+
+      <div className="mx-auto mt-10 max-w-2xl rounded-xl border bg-muted/30 p-5 text-sm">
+        <h3 className="mb-3 font-semibold">Como funcionam os créditos</h3>
+        <dl className="flex flex-col gap-3 text-muted-foreground">
+          <div>
+            <dt className="font-medium text-foreground">O que é um crédito?</dt>
+            <dd>1 crédito = R$0,001 de custo real cobrado pelo provedor do modelo.</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-foreground">O que consome crédito?</dt>
+            <dd>
+              O custo real de cada execução — depende do prompt, da resposta, de qual modelo você
+              escolheu, de quantos modelos comparou de uma vez e, se você definiu uma regra de
+              verificação, do modelo-juiz que avalia a resposta (também tem custo próprio).
+            </dd>
+          </div>
+          <div>
+            <dt className="font-medium text-foreground">O que acontece quando o crédito acaba?</dt>
+            <dd>Novas execuções ficam bloqueadas até o próximo ciclo mensal ou uma recarga avulsa.</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-foreground">O saldo acumula?</dt>
+            <dd>Não — os créditos do plano resetam a cada ciclo. Créditos avulsos comprados não vencem.</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-foreground">Tem recarga avulsa?</dt>
+            <dd>Sim — pacotes de créditos extras, comprados uma vez, sem assinatura.</dd>
+          </div>
+        </dl>
+      </div>
     </section>
   );
 }

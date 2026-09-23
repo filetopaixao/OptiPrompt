@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { computeWinner, type ComparisonPriority } from "@/lib/executions/insights";
 import { DEFAULT_TEMPERATURE } from "@/lib/ai/limits";
 import type { UsageSummary } from "@/lib/credits/usage-service";
-import { canUseCostProjection, getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
+import { canUseCostProjection } from "@/lib/plans/model-access";
 import { getModelDefinition, type ModelId } from "@/types/models";
 import type { ExecutionDTO, ExecutionResultDTO } from "@/types/execution";
 import { useUsageContext } from "./usage-context";
@@ -64,13 +64,18 @@ const SAMPLE_COST_PROJECTION_RESULTS: ExecutionResultDTO[] = [
 export function DashboardWorkspace({
   mostUsedModelIds,
   planSlug,
+  allowedModelIds,
+  maxSelectableModels,
 }: {
   mostUsedModelIds: ModelId[];
   planSlug: string | null;
+  /** Calculado no Server Component (ver src/app/app/page.tsx) — a lista do
+   * Free vem do banco (FreeTierModel), então não dá pra recalcular aqui
+   * dentro do client component. */
+  allowedModelIds: ModelId[];
+  maxSelectableModels: number;
 }) {
   const { applyUsage } = useUsageContext();
-  const allowedModelIds = getAllowedModelIds(planSlug);
-  const maxSelectableModels = getMaxSimultaneousModels(planSlug);
   const hasCostProjection = canUseCostProjection(planSlug);
 
   const [promptName, setPromptName] = useState("");

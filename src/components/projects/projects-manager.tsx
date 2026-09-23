@@ -276,7 +276,16 @@ function RemoveCollaboratorButton({ member }: { member: MemberRow }) {
   );
 }
 
-export function ProjectsManager({ projects }: { projects: ProjectRow[] }) {
+export function ProjectsManager({
+  projects,
+  canManageCollaborators,
+}: {
+  projects: ProjectRow[];
+  /** Recurso de colaboradores (múltiplos logins por projeto) continua
+   * exclusivo do plano Enterprise — a criação de projetos em si já não é
+   * (ver src/app/app/projects/actions.ts). */
+  canManageCollaborators: boolean;
+}) {
   return (
     <div className="mt-6 flex flex-col gap-4">
       <div className="flex justify-end">
@@ -299,40 +308,51 @@ export function ProjectsManager({ projects }: { projects: ProjectRow[] }) {
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                {project.members.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Nenhum colaborador ainda neste projeto.
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {project.members.map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center gap-4 rounded-lg border bg-card p-3"
-                      >
-                        <div className="flex flex-1 flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">
-                              {member.name || member.email}
-                            </span>
-                            {member.mustChangePassword && (
-                              <Badge variant="outline" className="text-xs">
-                                Ainda não trocou a senha
-                              </Badge>
-                            )}
+                {canManageCollaborators ? (
+                  <>
+                    {project.members.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum colaborador ainda neste projeto.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {project.members.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center gap-4 rounded-lg border bg-card p-3"
+                          >
+                            <div className="flex flex-1 flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-foreground">
+                                  {member.name || member.email}
+                                </span>
+                                {member.mustChangePassword && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Ainda não trocou a senha
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {member.email} · desde {dateFormatter.format(new Date(member.createdAt))}
+                              </p>
+                            </div>
+                            <RemoveCollaboratorButton member={member} />
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {member.email} · desde {dateFormatter.format(new Date(member.createdAt))}
-                          </p>
-                        </div>
-                        <RemoveCollaboratorButton member={member} />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    )}
+                    <div className="flex justify-start">
+                      <AddCollaboratorDialog projectId={project.id} />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Adicionar colaboradores com login próprio é exclusivo do plano Enterprise.{" "}
+                    <a href="/app/billing" className="font-medium text-primary hover:underline">
+                      Ver planos
+                    </a>
+                  </p>
                 )}
-                <div className="flex justify-start">
-                  <AddCollaboratorDialog projectId={project.id} />
-                </div>
               </CardContent>
             </Card>
           ))}

@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 const NAV_LINKS = [
   { href: "/admin/usuarios", label: "Usuários" },
   { href: "/admin/creditos", label: "Créditos" },
+  { href: "/admin/modelos", label: "Modelos (Free)" },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
