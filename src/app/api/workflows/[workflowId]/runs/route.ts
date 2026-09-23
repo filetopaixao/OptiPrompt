@@ -6,7 +6,7 @@ import { getAdapterForModel } from "@/lib/ai/adapters";
 import { getUsageSummary, registerConsumption } from "@/lib/credits/usage-service";
 import { prisma } from "@/lib/db/prisma";
 import { ensureOpenRouterApiKey } from "@/lib/openrouter/client";
-import { getAllowedModelIds } from "@/lib/plans/model-access";
+import { getAllowedModelIds } from "@/lib/plans/allowed-models";
 import { findAccessibleWorkflow } from "@/lib/workflows/access";
 import { topologicalOrder, transformWorkflowValue } from "@/lib/workflows/graph";
 import { workflowGraphSchema } from "@/lib/workflows/schema";
@@ -38,7 +38,7 @@ export async function POST(_: Request, { params }: Context) {
     prisma.user.findUniqueOrThrow({ where: { id: billingOwnerId }, select: { plan: { select: { slug: true } } } }),
   ]);
   if (usage.isOverLimit) return NextResponse.json({ error: "Sua cota mensal de uso foi atingida." }, { status: 403 });
-  const allowed = new Set(getAllowedModelIds(billingOwner.plan?.slug));
+  const allowed = new Set(await getAllowedModelIds(billingOwner.plan?.slug));
   const llmNodes = nodes.filter((node) => node.data.kind === "llm");
   if (llmNodes.some((node) => !node.data.modelId || !allowed.has(node.data.modelId as ModelId))) {
     return NextResponse.json({ error: "O workflow usa um modelo indisponível no seu plano." }, { status: 403 });

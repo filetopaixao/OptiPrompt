@@ -4,7 +4,7 @@ import { getBillingOwnerId } from "@/lib/auth/billing-owner";
 import { getCurrentUserId } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/db/prisma";
 import { getMostUsedModelIds } from "@/lib/executions/most-used-models";
-import { getAllowedModelIds } from "@/lib/plans/model-access";
+import { getAllowedModelIds } from "@/lib/plans/allowed-models";
 import { findAccessibleWorkflow } from "@/lib/workflows/access";
 import type { WorkflowProjectDTO } from "@/lib/workflows/types";
 
@@ -26,7 +26,7 @@ export default async function WorkflowPage({ params }: PageProps<"/app/workflows
     createdAt: workflow.createdAt.toISOString(), updatedAt: workflow.updatedAt.toISOString(),
     runs: workflow.runs.map((run) => ({ id: run.id, status: run.status, finalOutput: run.finalOutput, errorMessage: run.errorMessage, totalCredits: run.totalCredits, totalLatencyMs: run.totalLatencyMs, createdAt: run.createdAt.toISOString(), completedAt: run.completedAt?.toISOString() ?? null, steps: run.steps.map((step) => ({ id: step.id, nodeId: step.nodeId, kind: step.kind, label: step.label, modelId: step.modelId, status: step.status, inputText: step.inputText, outputText: step.outputText, errorMessage: step.errorMessage, promptTokens: step.promptTokens, completionTokens: step.completionTokens, latencyMs: step.latencyMs, estimatedCostInCredits: step.estimatedCostInCredits })) })),
   };
-  const allowedModelIds = getAllowedModelIds(billingOwner.plan?.slug);
+  const allowedModelIds = await getAllowedModelIds(billingOwner.plan?.slug);
   const testedModels = new Set(testedModelIds);
   const rankedModelIds = [...allowedModelIds].sort((a, b) => Number(testedModels.has(b)) - Number(testedModels.has(a)));
   return <WorkflowEditor initialWorkflow={serialized} allowedModelIds={rankedModelIds} testedModelIds={testedModelIds} />;
