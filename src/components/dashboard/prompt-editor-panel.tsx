@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TEMPERATURE_MAX, TEMPERATURE_MIN, TEMPERATURE_STEP } from "@/lib/ai/limits";
 import type { ModelId } from "@/types/models";
 import { ModelSelector } from "./model-selector";
 
@@ -26,6 +27,8 @@ interface PromptEditorPanelProps {
   onUserMessageChange: (value: string) => void;
   rule: string;
   onRuleChange: (value: string) => void;
+  temperature: number;
+  onTemperatureChange: (value: number) => void;
   selectedModelIds: ModelId[];
   onSelectedModelIdsChange: (modelIds: ModelId[]) => void;
   mostUsedModelIds: ModelId[];
@@ -139,6 +142,8 @@ export function PromptEditorPanel({
   onUserMessageChange,
   rule,
   onRuleChange,
+  temperature,
+  onTemperatureChange,
   selectedModelIds,
   onSelectedModelIdsChange,
   mostUsedModelIds,
@@ -322,6 +327,30 @@ export function PromptEditorPanel({
                     Um modelo-juiz confere se cada resposta respeita essa regra — consome créditos
                     extras.
                   </p>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="temperature">Temperatura</Label>
+                    <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-foreground">
+                      {temperature.toFixed(1)}
+                    </span>
+                  </div>
+                  <input
+                    id="temperature"
+                    type="range"
+                    min={TEMPERATURE_MIN}
+                    max={TEMPERATURE_MAX}
+                    step={TEMPERATURE_STEP}
+                    value={temperature}
+                    onChange={(event) => onTemperatureChange(Number(event.target.value))}
+                    disabled={isRunning}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0 — mais previsível</span>
+                    <span>2 — mais criativo</span>
+                  </div>
                 </div>
               </div>
             </AccordionContent>

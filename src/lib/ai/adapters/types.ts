@@ -13,6 +13,11 @@ export interface ModelAdapterInput {
    * planExecutionBudget (src/lib/ai/budget.ts) a partir do saldo restante
    * do usuário. Cai para MAX_OUTPUT_TOKENS (limits.ts) quando ausente. */
   maxOutputTokens?: number;
+  /** Controla a aleatoriedade da resposta (0 = mais determinístico, 2 = mais
+   * criativo/aleatório) — vem do slider do dashboard (ver
+   * prompt-editor-panel.tsx). Cai para DEFAULT_TEMPERATURE (limits.ts)
+   * quando ausente. */
+  temperature?: number;
   /** Chave OpenRouter própria do usuário que está executando — ver
    * src/lib/openrouter/client.ts. */
   apiKey: string;

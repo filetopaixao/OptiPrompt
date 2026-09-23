@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { BaseModelAdapter } from "./base-adapter";
 import type { ModelAdapterInput, ProviderCallResult } from "./types";
-import { MAX_OUTPUT_TOKENS } from "@/lib/ai/limits";
+import { DEFAULT_TEMPERATURE, MAX_OUTPUT_TOKENS } from "@/lib/ai/limits";
 import { getModelDefinition } from "@/types/models";
 
 /** Resposta do OpenRouter é compatível com o formato OpenAI, com um campo
@@ -43,6 +43,7 @@ export class OpenRouterAdapter extends BaseModelAdapter {
     const completion = await client.chat.completions.create({
       model: input.modelId,
       max_tokens: input.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
+      temperature: input.temperature ?? DEFAULT_TEMPERATURE,
       messages: [
         { role: "system", content: input.systemPrompt },
         { role: "user", content: userContent },
