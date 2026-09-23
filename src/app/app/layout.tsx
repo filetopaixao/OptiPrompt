@@ -1,9 +1,11 @@
+import { EmailVerificationBanner } from "@/components/dashboard/email-verification-banner";
 import { UsageProgressBar } from "@/components/dashboard/usage-progress-bar";
 import { UsageProvider } from "@/components/dashboard/usage-context";
 import { UserMenu } from "@/components/dashboard/user-menu";
 import { MainNav } from "@/components/layout/main-nav";
 import { Logo } from "@/components/brand/logo";
 import { requireActiveSubscription } from "@/lib/auth/require-active-subscription";
+import { FREE_PLAN_SLUG } from "@/lib/plans/free-tier";
 
 // Todo o grupo de rotas depende do usuário autenticado e do banco em tempo
 // real (créditos, histórico) — nunca deve ser pré-renderizado estaticamente.
@@ -11,10 +13,9 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const user = await requireActiveSubscription();
-  // Link "Projetos" só aparece pra quem é dono de fato da assinatura
-  // Enterprise — um colaborador já vinculado a um projeto não gerencia
-  // projetos.
-  const showProjects = user.planSlug === "agencia" && !user.isManagedAccount;
+  // Link "Projetos" aparece pra qualquer plano ativo — só uma conta já
+  // vinculada como colaboradora de outro projeto não gerencia os próprios.
+  const showProjects = !user.isManagedAccount;
 
   return (
     <UsageProvider>
@@ -32,6 +33,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
             />
           </div>
         </header>
+        {user.planSlug === FREE_PLAN_SLUG && !user.emailVerified && <EmailVerificationBanner />}
         <main className="flex-1 bg-muted/30">{children}</main>
       </div>
     </UsageProvider>

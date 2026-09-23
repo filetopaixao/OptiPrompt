@@ -7,7 +7,7 @@ vi.mock("@/app/app/projects/actions", () => ({
 }));
 
 it("mostra o estado vazio e permite iniciar a criação do primeiro projeto", () => {
-  render(<ProjectsManager projects={[]} />);
+  render(<ProjectsManager projects={[]} canManageCollaborators={true} />);
   expect(screen.getByText("Nenhum projeto ainda. Crie o primeiro acima.")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Novo projeto" })).toBeEnabled();
 });

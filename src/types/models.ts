@@ -50,6 +50,12 @@ export interface ModelDefinition {
    * de texto puro (GPT-OSS, Llama 3.x "instruct" sem sufixo Vision) não
    * aceitam imagem — só os multimodais oficiais de cada fabricante aceitam. */
   supportsImages: boolean;
+  /** false quando o modelo está temporariamente fora do ar (provedor com
+   * erro sustentado ou removido do OpenRouter) — usado só pro 3º estado do
+   * ModelSelector ("Temporariamente indisponível"). Flag estático/manual
+   * nesta fase (sem detecção automática de outage); default true quando
+   * ausente, então nenhum modelo existente precisou declarar isso. */
+  enabled?: boolean;
 }
 
 export const MODEL_CATALOG: readonly ModelDefinition[] = [

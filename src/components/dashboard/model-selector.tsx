@@ -1,6 +1,7 @@
 "use client";
 
-import { Sparkles, Star } from "lucide-react";
+import Link from "next/link";
+import { Lock, Sparkles, Star, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -28,8 +29,9 @@ interface ModelSelectorProps {
   /** Modelos mais usados pelo usuário (ver getMostUsedModelIds) — ganham um
    * selo de destaque como atalho visual. */
   mostUsedModelIds?: ModelId[];
-  /** Catálogo visível pro plano do usuário (ver getAllowedModelIds) — o
-   * Starter só vê um subconjunto, os demais planos veem tudo. */
+  /** Catálogo liberado pro plano do usuário (ver getAllowedModelIds) — o
+   * restante do catálogo continua visível, só aparece bloqueado (ver os 3
+   * estados abaixo) em vez de sumir da lista, pra servir de upsell. */
   allowedModelIds: ModelId[];
   /** Teto de seleção simultânea do plano (Infinity quando não há limite) —
    * ao atingir, os checkboxes ainda não marcados ficam desabilitados. */
@@ -65,9 +67,7 @@ export function ModelSelector({
         </p>
       )}
       {PROVIDER_ORDER.map((provider) => {
-        const models = MODEL_CATALOG.filter(
-          (model) => model.provider === provider && allowedModelIds.includes(model.id),
-        );
+        const models = MODEL_CATALOG.filter((model) => model.provider === provider);
         if (models.length === 0) return null;
         return (
           <div key={provider} className="flex flex-col gap-2">
@@ -80,8 +80,18 @@ export function ModelSelector({
                 const isMostUsed = mostUsedModelIds.includes(model.id);
                 const isSelected = selectedModelIds.includes(model.id);
                 const isImageIncompatible = imageAttached && !model.supportsImages;
+                // 3 estados: disponível (padrão), bloqueado pelo plano
+                // (cadeado + CTA de upgrade) e temporariamente indisponível
+                // (provedor com erro/modelo desativado — flag estático em
+                // types/models.ts, sem detecção automática nesta fase).
+                const isUnavailable = model.enabled === false;
+                const isLocked = !isUnavailable && !allowedModelIds.includes(model.id);
                 const isCheckboxDisabled =
-                  disabled || (!isSelected && atSelectionLimit) || isImageIncompatible;
+                  disabled ||
+                  isUnavailable ||
+                  isLocked ||
+                  (!isSelected && atSelectionLimit) ||
+                  isImageIncompatible;
                 return (
                   <div
                     key={model.id}
@@ -116,14 +126,31 @@ export function ModelSelector({
                           </span>
                         )}
                       </Label>
-                      <Badge variant={model.tier === "PREMIUM" ? "default" : "secondary"}>
-                        {model.tier === "PREMIUM" ? "Premium" : "Custo-benefício"}
-                      </Badge>
+                      {!isUnavailable && !isLocked && (
+                        <Badge variant={model.tier === "PREMIUM" ? "default" : "secondary"}>
+                          {model.tier === "PREMIUM" ? "Premium" : "Custo-benefício"}
+                        </Badge>
+                      )}
                     </div>
-                    {model.promoTag && (
+                    {model.promoTag && !isLocked && !isUnavailable && (
                       <span className="ml-6 flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
                         <Sparkles className="size-3" />
                         {model.promoTag}
+                      </span>
+                    )}
+                    {isLocked && (
+                      <span className="ml-6 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Lock className="size-3" />
+                        Disponível nos planos pagos —{" "}
+                        <Link href="/app/billing" className="font-medium text-primary hover:underline">
+                          fazer upgrade
+                        </Link>
+                      </span>
+                    )}
+                    {isUnavailable && (
+                      <span className="ml-6 flex items-center gap-1 text-xs text-muted-foreground">
+                        <TriangleAlert className="size-3" />
+                        Temporariamente indisponível
                       </span>
                     )}
                   </div>

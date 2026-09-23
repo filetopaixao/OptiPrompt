@@ -10,7 +10,11 @@ import { planExecutionBudget } from "@/lib/ai/budget";
 import { ensureOpenRouterApiKey } from "@/lib/openrouter/client";
 import { checkRule } from "@/lib/ai/rule-checker";
 import { brlToCredits, USD_TO_BRL_RATE } from "@/lib/credits/credit-converter";
-import { getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
+import { getMaxSimultaneousModels } from "@/lib/plans/model-access";
+import { getAllowedModelIds } from "@/lib/plans/allowed-models";
+import { FREE_PLAN_SLUG } from "@/lib/plans/free-tier";
+import { checkFreeTierExecutionAllowed, recordFreeExecutionAttempt } from "@/lib/plans/free-tier-guard";
+import { getClientIp } from "@/lib/rate-limit/ip-limiter";
 import { TEMPERATURE_MAX, TEMPERATURE_MIN } from "@/lib/ai/limits";
 import { getModelDefinition, MODEL_CATALOG } from "@/types/models";
 import type { UnifiedModelResponse } from "@/types/models";
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
     where: { id: billingOwnerId },
     select: { plan: { select: { slug: true } } },
   });
-  const allowedModelIds = getAllowedModelIds(plan?.slug ?? null);
+  const allowedModelIds = await getAllowedModelIds(plan?.slug ?? null);
   const disallowedModelIds = modelIds.filter((modelId) => !allowedModelIds.includes(modelId));
   if (disallowedModelIds.length > 0) {
     return NextResponse.json(
@@ -124,6 +128,15 @@ export async function POST(request: Request) {
       { error: `Seu plano permite comparar até ${maxSimultaneousModels} modelos por vez.` },
       { status: 403 },
     );
+  }
+
+  const isFreePlan = plan?.slug === FREE_PLAN_SLUG;
+  const clientIp = getClientIp(request.headers);
+  if (isFreePlan) {
+    const gate = await checkFreeTierExecutionAllowed({ userId: billingOwnerId, ipAddress: clientIp });
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.error }, { status: gate.status });
+    }
   }
 
   // Mesma trava do ModelSelector (esconde/desabilita modelo sem suporte a
@@ -183,6 +196,17 @@ export async function POST(request: Request) {
   });
 
   const { results, ruleCheckCreditsConsumed } = await applyRuleChecks(rawResults, rule, apiKey);
+
+  if (isFreePlan) {
+    // Só sucesso consome a cota diária — falha exclusiva do provedor (todos
+    // os modelos deram ERROR) fica só registrada pra telemetria de abuso.
+    await recordFreeExecutionAttempt({
+      userId: billingOwnerId,
+      modelIds,
+      ipAddress: clientIp,
+      resultStatuses: results.map((result) => result.status),
+    });
+  }
 
   const execution = await prisma.execution.create({
     data: {

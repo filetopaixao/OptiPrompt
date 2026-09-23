@@ -10,10 +10,23 @@ import { requireActiveSubscription } from "@/lib/auth/require-active-subscriptio
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
+/** Qualquer conta com assinatura ativa (não uma já vinculada como
+ * colaboradora de outro projeto) pode criar/gerenciar os próprios projetos
+ * — usado pra organizar benchmarks por cliente (ver Parte 2 do pedido de
+ * benchmark persistente). Repetido aqui (não só na página) porque uma
+ * Server Action pode ser chamada direto, sem passar pela UI. */
+async function requireProjectOwner(): Promise<string> {
+  const userId = await getCurrentUserId();
+  const { isManagedAccount } = await requireActiveSubscription();
+  if (isManagedAccount) {
+    redirect("/app");
+  }
+  return userId;
+}
+
 /** Só a própria conta Enterprise (não um colaborador já vinculado a um
- * projeto) pode gerenciar projetos e colaboradores — mesma trava da
- * página, repetida aqui porque uma Server Action pode ser chamada direto,
- * sem passar pela UI. */
+ * projeto) pode gerenciar colaboradores — esse recurso continua exclusivo
+ * do Enterprise mesmo com a criação de projetos liberada pra todo plano. */
 async function requireEnterpriseOwner(): Promise<string> {
   const userId = await getCurrentUserId();
   const { planSlug, isManagedAccount } = await requireActiveSubscription();
@@ -24,7 +37,7 @@ async function requireEnterpriseOwner(): Promise<string> {
 }
 
 export async function createProject(input: { name: string }): Promise<ActionResult> {
-  const ownerId = await requireEnterpriseOwner();
+  const ownerId = await requireProjectOwner();
 
   const name = input.name.trim();
   if (!name) {
@@ -38,7 +51,7 @@ export async function createProject(input: { name: string }): Promise<ActionResu
 }
 
 export async function removeProject(projectId: string): Promise<ActionResult> {
-  const ownerId = await requireEnterpriseOwner();
+  const ownerId = await requireProjectOwner();
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },

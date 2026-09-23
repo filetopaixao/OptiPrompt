@@ -1,30 +1,58 @@
-import { Activity, GitCompare, Receipt } from "lucide-react";
+import {
+  FileText,
+  FlaskConical,
+  FolderKanban,
+  GitCompare,
+  Key,
+  Receipt,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const BENEFITS = [
   {
-    icon: Receipt,
-    title: "Custo Transparente por Chamada e Modelo",
+    icon: Key,
+    title: "Sem administrar chaves de vários provedores",
     description:
-      "Descubra o custo exato em frações de centavo e tokens gastos em cada execução, comparando lado a lado o consumo de cada modelo.",
+      "OpenAI, Anthropic, Google, DeepSeek e mais numa única conta, via OpenRouter — nenhum cadastro individual de API key.",
   },
   {
-    icon: Activity,
-    title: "Latência e Tempo de Resposta",
+    icon: Receipt,
+    title: "Custo por execução e por volume",
     description:
-      "Descubra instantaneamente qual modelo de IA responde mais rápido e garanta automações ágeis e sem atrasos para os seus clientes.",
+      "Custo exato de cada chamada e projeção de custo mensal simulando o volume real de requisições do seu cliente.",
+  },
+  {
+    icon: FileText,
+    title: "Testes com dados reais do workflow",
+    description:
+      "Texto, imagem, PDF e documentos — teste com os mesmos tipos de entrada que sua automação recebe de verdade.",
+  },
+  {
+    icon: FlaskConical,
+    title: "Benchmarks persistentes",
+    description:
+      "Salve casos de teste, modelos e critérios uma vez e reexecute sempre que mudar um prompt — não é uma comparação única.",
   },
   {
     icon: GitCompare,
-    title: "Teste A/B de Prompts em Produção",
+    title: "Comparação com baseline",
     description:
-      "Compare custo, tempo e desempenho entre a v1 e a v2 do seu prompt com dados reais antes de ir para produção.",
+      "Reexecute um benchmark salvo e compare com a versão anterior para pegar regressão de custo, qualidade ou latência antes de publicar.",
+  },
+  {
+    icon: FolderKanban,
+    title: "Projetos isolados por cliente",
+    description:
+      "Organize benchmarks e histórico por cliente — dados de um projeto nunca aparecem em outro.",
   },
 ] as const;
 
 export function LandingBenefits() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <div className="mb-10 text-center">
+        <h2 className="text-3xl font-semibold tracking-tight">Diferenciais</h2>
+      </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {BENEFITS.map(({ icon: Icon, title, description }) => (
           <Card key={title}>

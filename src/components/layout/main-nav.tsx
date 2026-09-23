@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const BASE_NAV_ITEMS = [
   { href: "/app", label: "Dashboard" },
   { href: "/app/history", label: "Histórico" },
+  { href: "/app/benchmarks", label: "Benchmarks" },
 ] as const;
 
 const PROJECTS_NAV_ITEM = { href: "/app/projects", label: "Projetos" } as const;

@@ -66,12 +66,12 @@ enum SubscriptionStatus {
 }
 
 model Plan {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  slug         String   @unique
+  id                      String   @id @default(cuid())
+  name                    String   @unique
+  slug                    String   @unique
   /// Preço da assinatura em centavos. O teto mensal de créditos é derivado
   /// daqui (20% do valor) — ver getMonthlyCreditLimit em credit-converter.ts.
-  priceInCents Int
+  priceInCents            Int
   /// Sobrescreve o teto mensal de créditos calculado a partir do preço —
   /// usado pelo plano "Gratuito" (ver src/lib/plans/trial.ts), que tem
   /// priceInCents 0 mas precisa de um teto próprio (300 créditos). null em
@@ -86,11 +86,11 @@ model Plan {
 }
 
 model User {
-  id           String  @id @default(cuid())
-  email        String  @unique
-  name         String?
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  name               String?
   /// Hash bcrypt — null só para linhas legadas anteriores ao login real.
-  passwordHash String?
+  passwordHash       String?
   /// Senha provisória definida pelo admin (ver admin/usuarios) — força a
   /// troca no próximo acesso antes de liberar qualquer rota de /app.
   mustChangePassword Boolean  @default(false)
@@ -128,6 +128,18 @@ model User {
   /// null em toda conta que nunca teve o plano Gratuito.
   trialEndsAt DateTime?
 
+  /// Confirmação de e-mail (ver src/lib/email) — exigida só pra rodar a
+  /// execução diária do plano Free (proteção contra abuso por contas
+  /// descartáveis), não bloqueia login nem o resto do app. null até o
+  /// usuário clicar no link do e-mail de verificação.
+  emailVerifiedAt DateTime?
+
+  /// Timestamp da última execução BEM-SUCEDIDA do plano Free (ver
+  /// src/lib/plans/free-tier.ts) — só sucesso atualiza este campo; uma
+  /// falha exclusiva do provedor não consome a cota diária. null até a
+  /// primeira execução.
+  freeExecutionUsedAt DateTime?
+
   /// Chave OpenRouter provisionada automaticamente pra esta conta (ver
   /// src/lib/openrouter/client.ts) — todas as execuções desse usuário usam
   /// essa chave, com teto de gasto (`limit`) espelhando creditsTotal como
@@ -154,15 +166,22 @@ model User {
   executions                Execution[]
   providerCreditAllocations ProviderCreditAllocation[]
   creditPackPurchases       CreditPackPurchase[]
+  emailVerificationTokens   EmailVerificationToken[]
+  freeExecutionAttempts     FreeExecutionAttempt[]
+  productEvents             ProductEvent[]
+  benchmarksCreated         Benchmark[]
+  benchmarkRunsCreated      BenchmarkRun[]
 
   @@map("users")
 }
 
-/// Projeto dentro de uma conta Enterprise (ver src/app/app/projects) —
-/// agrupa colaboradores que compartilham histórico entre si (ver
-/// listExecutionsForProject). Colaboradores de projetos diferentes do mesmo
-/// dono não veem o histórico uns dos outros; só o dono vê tudo agregado
-/// (ver listExecutionsForTeam).
+/// Projeto de uma agência — agrupa histórico, benchmarks e (só no plano
+/// Enterprise) colaboradores em torno de um cliente. Criação é liberada pra
+/// qualquer plano ativo (ver src/app/app/projects/actions.ts); só o
+/// recurso de colaboradores (múltiplos logins por projeto, ver
+/// listExecutionsForProject) continua exclusivo do Enterprise. Colaboradores
+/// de projetos diferentes do mesmo dono não veem o histórico uns dos
+/// outros; só o dono vê tudo agregado (ver listExecutionsForTeam).
 model Project {
   id        String   @id @default(cuid())
   name      String
@@ -172,6 +191,8 @@ model Project {
   owner   User   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   members User[]
+
+  benchmarks Benchmark[]
 
   @@index([ownerId])
   @@map("projects")
@@ -232,7 +253,7 @@ model ProviderCreditAllocation {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// event.id do webhook do Stripe que originou esta alocação (idempotência).
-  stripeEventId     String @unique
+  stripeEventId     String         @unique
   amountPaidInCents Int
   provider          CreditProvider
   amountInCents     Int
@@ -294,4 +315,229 @@ model ExecutionResult {
 
   @@index([executionId])
   @@map("execution_results")
+}
+
+/// Verificação de e-mail no cadastro (ver src/lib/email) — só bloqueia a
+/// execução diária do plano Free, não o resto do app.
+model EmailVerificationToken {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+/// Lista configurável (via /admin/modelos) de quais modelos do MODEL_CATALOG
+/// (src/types/models.ts) ficam disponíveis no plano Free — nunca hardcoded
+/// no frontend (ver src/lib/plans/free-tier.ts). O `modelId` aqui é o mesmo
+/// ID usado no catálogo estático (ex.: "openai/gpt-4o-mini"), não uma FK —
+/// o catálogo em si continua vivendo só no código.
+model FreeTierModel {
+  id        String   @id @default(cuid())
+  modelId   String   @unique
+  active    Boolean  @default(false)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("free_tier_models")
+}
+
+/// Log de toda tentativa de execução do plano Free, sucesso ou falha —
+/// telemetria de abuso (ver src/lib/plans/free-tier.ts). Só uma tentativa
+/// com succeeded=true consome a cota diária (User.freeExecutionUsedAt);
+/// falha exclusiva do provedor não consome, mas fica registrada aqui.
+model FreeExecutionAttempt {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  modelIds              String[]
+  succeeded             Boolean
+  providerErrorOccurred Boolean  @default(false)
+  ipAddress             String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("free_execution_attempts")
+}
+
+/// Log mínimo de eventos de funil (calculadora, cadastro Free, upgrade
+/// etc.) — não é uma plataforma de analytics, só uma tabela de log simples
+/// pra medir ativação/conversão (ver src/lib/analytics/track-event.ts).
+model ProductEvent {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  name       String
+  properties Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@index([userId])
+  @@map("product_events")
+}
+
+/// Um benchmark persistente: conjunto salvo de casos de teste + modelos +
+/// critérios que pode ser reexecutado sempre que um prompt/modelo/workflow
+/// mudar, pra comparar a nova versão com uma execução anterior (baseline) e
+/// pegar regressão antes de publicar. Ver src/lib/benchmarks/run-benchmark.ts.
+model Benchmark {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+  taskType    String?
+
+  /// Critérios qualitativos em texto livre (revisão manual) — v1 não tem
+  /// tabela relacional própria por critério (ver plano de implementação).
+  criteria String[] @default([])
+
+  /// Limites usados pela comparação entre runs (ver src/lib/benchmarks/diff.ts).
+  /// Todos opcionais: um benchmark sem limite configurado nunca reprova
+  /// automaticamente, só informa as diferenças.
+  minQualityScore           Int?
+  maxQualityDropPoints      Int?
+  maxCostIncreasePercent    Int?
+  maxLatencyIncreasePercent Int?
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  /// Só atribuição/auditoria ("quem criou") — o dono real do ciclo de vida
+  /// é o Project (já cascade acima). onDelete: SetNull porque apagar a
+  /// conta de quem criou (ex.: remover um colaborador, ver
+  /// removeCollaboratorUser) não pode derrubar o benchmark do cliente; ele
+  /// só perde a atribuição.
+  createdByUserId String?
+  createdByUser   User?   @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cases  BenchmarkCase[]
+  models BenchmarkModel[]
+  runs   BenchmarkRun[]
+
+  @@index([projectId])
+  @@map("benchmarks")
+}
+
+/// Um caso de teste dentro de um benchmark — um benchmark pode começar com
+/// um caso só e crescer depois (não é obrigatório montar um dataset
+/// completo antes de testar).
+model BenchmarkCase {
+  id          String    @id @default(cuid())
+  benchmarkId String
+  benchmark   Benchmark @relation(fields: [benchmarkId], references: [id], onDelete: Cascade)
+
+  systemPrompt String? @db.Text
+  userMessage  String  @db.Text
+
+  /// Imagem anexada, como data URL — mesmo formato usado no dashboard (ver
+  /// prompt-editor-panel.tsx). Documento/PDF já chega aqui com o texto
+  /// extraído concatenado em userMessage, igual ao fluxo do dashboard;
+  /// só imagem precisa ser persistida à parte pra poder ser reenviada em
+  /// cada reexecução do benchmark.
+  attachedImageDataUrl String? @db.Text
+
+  expectedWinnerModelId String?
+  expectedResponse      String? @db.Text
+
+  tags         String[] @default([])
+  isAnonymized Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  results BenchmarkResult[]
+
+  @@index([benchmarkId])
+  @@map("benchmark_cases")
+}
+
+/// Modelo incluído no conjunto de comparação de um benchmark (ver
+/// ModelSelector) — modelId é o mesmo ID do MODEL_CATALOG, não uma FK.
+model BenchmarkModel {
+  id          String    @id @default(cuid())
+  benchmarkId String
+  benchmark   Benchmark @relation(fields: [benchmarkId], references: [id], onDelete: Cascade)
+
+  modelId   String
+  createdAt DateTime @default(now())
+
+  @@unique([benchmarkId, modelId])
+  @@map("benchmark_models")
+}
+
+/// Uma execução completa de um benchmark (todos os casos × todos os
+/// modelos) — equivalente a "Execution", mas no nível de benchmark. Reusa o
+/// mesmo motor de execução (runComparison/OpenRouterAdapter) caso a caso.
+model BenchmarkRun {
+  id          String    @id @default(cuid())
+  benchmarkId String
+  benchmark   Benchmark @relation(fields: [benchmarkId], references: [id], onDelete: Cascade)
+
+  label      String?
+  /// Marca esta run como a baseline atual do benchmark — no máximo uma
+  /// por benchmark, garantido em código (ver run-benchmark.ts), não aqui.
+  isBaseline Boolean @default(false)
+
+  /// Só atribuição ("quem executou") — mesma razão do SetNull em
+  /// Benchmark.createdByUserId acima.
+  createdByUserId String?
+  createdByUser   User?   @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  results BenchmarkResult[]
+
+  @@index([benchmarkId])
+  @@map("benchmark_runs")
+}
+
+/// Resultado de um modelo pra um caso específico, dentro de uma run —
+/// equivalente a "ExecutionResult", mesma forma de dado (ver to-dto.ts).
+model BenchmarkResult {
+  id             String       @id @default(cuid())
+  benchmarkRunId String
+  benchmarkRun   BenchmarkRun @relation(fields: [benchmarkRunId], references: [id], onDelete: Cascade)
+
+  benchmarkCaseId String
+  benchmarkCase   BenchmarkCase @relation(fields: [benchmarkCaseId], references: [id], onDelete: Cascade)
+
+  provider Provider
+  modelId  String
+  tier     ModelTier
+  status   ExecutionStatus @default(SUCCESS)
+
+  responseText String? @db.Text
+  errorMessage String? @db.Text
+
+  promptTokens     Int @default(0)
+  completionTokens Int @default(0)
+  latencyMs        Int @default(0)
+
+  costInBRL     Decimal @db.Decimal(10, 6)
+  costInCredits Int
+
+  /// Nota manual de qualidade (0-10) por revisão humana — v1 começa com
+  /// revisão manual (ver Parte 3 do pedido); null até alguém revisar.
+  manualQualityScore Int?
+
+  /// Veredito do juiz de IA, quando o benchmark tem critério verificável
+  /// por regra — mesmo mecanismo do rule-checker.ts, opcional.
+  ruleVerdict RuleVerdict?
+  ruleReason  String?      @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([benchmarkRunId])
+  @@index([benchmarkCaseId])
+  @@map("benchmark_results")
 }

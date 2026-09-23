@@ -9,7 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignupForm({ planSlug }: { planSlug: string }) {
+export function SignupForm({
+  planSlug,
+  skipCheckout = false,
+}: {
+  planSlug: string;
+  /** true no fluxo de cadastro do plano Free — ele já é atribuído
+   * automaticamente no servidor (ver /api/auth/signup), então não existe
+   * checkout do Stripe pra rodar depois do login; vai direto pro app. */
+  skipCheckout?: boolean;
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -44,6 +53,11 @@ export function SignupForm({ planSlug }: { planSlug: string }) {
       if (signInResult?.error) {
         toast.error("Conta criada, mas o login automático falhou. Entre manualmente.");
         router.push("/login");
+        return;
+      }
+
+      if (skipCheckout) {
+        router.push("/app");
         return;
       }
 
@@ -104,7 +118,7 @@ export function SignupForm({ planSlug }: { planSlug: string }) {
       </div>
       <Button type="submit" disabled={isLoading} className="mt-2">
         {isLoading && <Loader2 className="animate-spin" />}
-        Criar conta e continuar para o pagamento
+        {skipCheckout ? "Criar conta gratuita" : "Criar conta e continuar para o pagamento"}
       </Button>
     </form>
   );

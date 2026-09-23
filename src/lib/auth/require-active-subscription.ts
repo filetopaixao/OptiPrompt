@@ -18,6 +18,10 @@ export interface ActiveSubscriptionUser {
    * pra conta dona/comum. Usado pra escopar o histórico compartilhado (ver
    * listExecutionsForProject). */
   projectId: string | null;
+  /** true quando esta conta já confirmou o e-mail (ver
+   * src/lib/email/verify-email-token.ts) — usado pra mostrar o aviso de
+   * confirmação pendente no plano Free (ver EmailVerificationBanner). */
+  emailVerified: boolean;
 }
 
 /**
@@ -41,6 +45,7 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
       mustChangePassword: true,
       projectId: true,
       project: { select: { ownerId: true } },
+      emailVerifiedAt: true,
     },
   });
 
@@ -85,5 +90,6 @@ export async function requireActiveSubscription(): Promise<ActiveSubscriptionUse
     planSlug: billingOwner.plan?.slug ?? null,
     isManagedAccount: user.projectId !== null,
     projectId: user.projectId,
+    emailVerified: user.emailVerifiedAt !== null,
   };
 }
