@@ -5,6 +5,7 @@ import { FileOutput } from "lucide-react";
 import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { computeWinner, type ComparisonPriority } from "@/lib/executions/insights";
+import { DEFAULT_TEMPERATURE } from "@/lib/ai/limits";
 import type { UsageSummary } from "@/lib/credits/usage-service";
 import { canUseCostProjection, getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
 import { getModelDefinition, type ModelId } from "@/types/models";
@@ -76,6 +77,7 @@ export function DashboardWorkspace({
   const [systemPrompt, setSystemPrompt] = useState("");
   const [userMessage, setUserMessage] = useState("");
   const [rule, setRule] = useState("");
+  const [temperature, setTemperature] = useState(DEFAULT_TEMPERATURE);
   const [attachedImage, setAttachedImage] = useState<AttachedImage | null>(null);
   // Vazio por padrão — obriga a escolha explícita do modelo em vez de rodar
   // sem querer com uma seleção pré-marcada.
@@ -103,6 +105,7 @@ export function DashboardWorkspace({
           imageDataUrl: attachedImage?.dataUrl,
           modelIds: selectedModelIds,
           rule: rule.trim() || undefined,
+          temperature,
         }),
       });
 
@@ -178,6 +181,8 @@ export function DashboardWorkspace({
         onUserMessageChange={setUserMessage}
         rule={rule}
         onRuleChange={setRule}
+        temperature={temperature}
+        onTemperatureChange={setTemperature}
         selectedModelIds={selectedModelIds}
         onSelectedModelIdsChange={setSelectedModelIds}
         mostUsedModelIds={mostUsedModelIds}

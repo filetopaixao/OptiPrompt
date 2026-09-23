@@ -12,6 +12,10 @@ export interface RunComparisonInput {
   /** Teto de tokens de saída por modelo, calculado por planExecutionBudget
    * a partir do saldo restante do usuário — ver src/lib/ai/budget.ts. */
   budgetPlans: ModelBudgetPlan[];
+  /** Controla a aleatoriedade da resposta, igual pra todos os modelos desta
+   * execução — vem do slider do dashboard. Cai para DEFAULT_TEMPERATURE
+   * (limits.ts) quando ausente. */
+  temperature?: number;
   /** Chave OpenRouter do usuário que está executando — ver
    * src/lib/openrouter/client.ts. */
   apiKey: string;
@@ -24,7 +28,7 @@ export interface RunComparisonInput {
  * falha de um modelo nunca derruba os demais.
  */
 export async function runComparison(input: RunComparisonInput): Promise<UnifiedModelResponse[]> {
-  const { systemPrompt, userMessage, imageDataUrl, modelIds, budgetPlans, apiKey } = input;
+  const { systemPrompt, userMessage, imageDataUrl, modelIds, budgetPlans, temperature, apiKey } = input;
 
   const maxOutputTokensByModel = new Map(
     budgetPlans.map((plan) => [plan.modelId, plan.maxOutputTokens]),
@@ -38,6 +42,7 @@ export async function runComparison(input: RunComparisonInput): Promise<UnifiedM
         userMessage,
         imageDataUrl,
         maxOutputTokens: maxOutputTokensByModel.get(modelId),
+        temperature,
         apiKey,
       }),
     ),

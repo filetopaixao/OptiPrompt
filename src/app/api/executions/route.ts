@@ -11,6 +11,7 @@ import { ensureOpenRouterApiKey } from "@/lib/openrouter/client";
 import { checkRule } from "@/lib/ai/rule-checker";
 import { brlToCredits, USD_TO_BRL_RATE } from "@/lib/credits/credit-converter";
 import { getAllowedModelIds, getMaxSimultaneousModels } from "@/lib/plans/model-access";
+import { TEMPERATURE_MAX, TEMPERATURE_MIN } from "@/lib/ai/limits";
 import { getModelDefinition, MODEL_CATALOG } from "@/types/models";
 import type { UnifiedModelResponse } from "@/types/models";
 
@@ -41,6 +42,9 @@ const runExecutionSchema = z.object({
     .max(MAX_IMAGE_DATA_URL_LENGTH, "Imagem muito grande.")
     .regex(/^data:image\/(png|jpe?g|webp|gif);base64,/, "Formato de imagem não suportado.")
     .optional(),
+  /** Controla a aleatoriedade da resposta — mesma faixa do slider no front
+   * (ver prompt-editor-panel.tsx), nunca confiando só na trava da UI. */
+  temperature: z.number().min(TEMPERATURE_MIN).max(TEMPERATURE_MAX).optional(),
 });
 
 interface JudgedResult extends UnifiedModelResponse {
@@ -91,7 +95,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Payload inválido." }, { status: 400 });
   }
 
-  const { promptId, promptName, systemPrompt, userMessage, modelIds, rule, imageDataUrl } = parsed.data;
+  const { promptId, promptName, systemPrompt, userMessage, modelIds, rule, imageDataUrl, temperature } =
+    parsed.data;
 
   // Contas colaboradoras de um projeto Enterprise (ver User.projectId) não
   // têm plano/créditos/chave OpenRouter próprios — tudo isso resolve pro
@@ -173,6 +178,7 @@ export async function POST(request: Request) {
     imageDataUrl,
     modelIds,
     budgetPlans: budgetPlan.plans,
+    temperature,
     apiKey,
   });
 
